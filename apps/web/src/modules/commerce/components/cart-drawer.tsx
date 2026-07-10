@@ -66,6 +66,11 @@ export function CartDrawer({ userId }: CartDrawerProps) {
         throw new Error(data.error || 'Checkout failed');
       }
 
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
       setCheckoutStatus({
         loading: false,
         success: true,

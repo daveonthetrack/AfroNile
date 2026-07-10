@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import { stripeMock } from '../../../modules/commerce/stripe';
+import Stripe from 'stripe';
+import crypto from 'crypto';
 
 interface CheckoutItem {
   productId: string;
@@ -98,16 +100,118 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Fetch titles and SKUs for Stripe line items representation
+      const orderItemsWithProducts = await tx.orderItem.findMany({
+        where: { orderId: order.id },
+        include: { product: true }
+      });
+
+      const lineItems = orderItemsWithProducts.map(item => ({
+        name: item.product.title,
+        unitPriceCents: item.unitPriceCents,
+        quantity: item.quantity,
+        sku: item.product.sku,
+        orderItemId: item.id,
+        productId: item.productId,
+      }));
+
       return {
         orderId: order.id,
         totalAmountCents: calculatedTotalCents,
+        lineItems,
       };
     });
 
-    // Interact with Stripe mock client outside database transaction to release connection locks
-    const paymentIntent = await stripeMock.createPaymentIntent(transactionResult.totalAmountCents);
+    let redirectUrl: string | null = null;
+    let stripeSessionId: string | null = null;
 
-    // Update order with payment intent references
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+          apiVersion: '2024-04-10' as any,
+        });
+
+        const origin = req.headers.get('origin') || 'http://localhost:3000';
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: transactionResult.lineItems.map((item) => ({
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: item.name,
+                metadata: {
+                  sku: item.sku,
+                },
+              },
+              unit_amount: item.unitPriceCents,
+            },
+            quantity: item.quantity,
+          })),
+          mode: 'payment',
+          success_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${transactionResult.orderId}`,
+          cancel_url: `${origin}/shop`,
+          metadata: {
+            orderId: transactionResult.orderId,
+            userId,
+          },
+        });
+
+        redirectUrl = session.url;
+        stripeSessionId = session.id;
+
+        await prisma.order.update({
+          where: { id: transactionResult.orderId },
+          data: {
+            stripePaymentIntentId: session.id,
+          },
+        });
+
+      } catch (stripeErr) {
+        console.error('Stripe Checkout session creation failed, falling back to mock:', stripeErr);
+      }
+    }
+
+    if (redirectUrl) {
+      return NextResponse.json({
+        success: true,
+        orderId: transactionResult.orderId,
+        totalAmountCents: transactionResult.totalAmountCents,
+        redirectUrl: redirectUrl,
+        stripePaymentIntentId: stripeSessionId,
+      }, { status: 201 });
+    }
+
+    // fallback to Demo Mode: Auto-approve payment and generate tickets immediately
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: transactionResult.orderId },
+        data: { status: 'PAID' },
+      });
+
+      for (const item of transactionResult.lineItems) {
+        if (item.sku.startsWith('TICKET_')) {
+          const eventId = item.sku.replace('TICKET_', '');
+          const event = await tx.event.findUnique({ where: { id: eventId } });
+          if (!event) continue;
+
+          for (let i = 0; i < item.quantity; i++) {
+            const randomBytes = crypto.randomBytes(32).toString('hex');
+            const qrCodeHash = crypto.createHash('sha256').update(randomBytes).digest('hex');
+
+            await tx.ticket.create({
+              data: {
+                orderItemId: item.orderItemId,
+                eventId: event.id,
+                qrCodeHash: qrCodeHash,
+              }
+            });
+          }
+        }
+      }
+    });
+
+    const paymentIntent = await stripeMock.createPaymentIntent(transactionResult.totalAmountCents);
     await prisma.order.update({
       where: { id: transactionResult.orderId },
       data: {

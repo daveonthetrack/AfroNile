@@ -93,9 +93,11 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
     const name = title.toLowerCase();
     if (name.includes('shirt') || name.includes('tee') || name.includes('hoodie') || name.includes('apparel')) {
       return (
-        <svg className="w-20 h-20 text-zinc-700 stroke-[0.75] transition-transform duration-500 group-hover:scale-105" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M4 8 L8 5 L10 6.5 L12 5.5 L14 6.5 L16 5 L20 8 L18 12 L16 11 L16 20 L8 20 L8 11 L6 12 Z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <img 
+          src="/Tshirt.png" 
+          alt={title} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+        />
       );
     }
     if (name.includes('hat') || name.includes('cap') || name.includes('beanie')) {
