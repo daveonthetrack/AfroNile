@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    let redirectUrl: string | null = null;
+    let clientSecret: string | null = null;
     let stripeSessionId: string | null = null;
 
     const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
         const origin = req.headers.get('origin') || 'http://localhost:3000';
 
         const session = await stripe.checkout.sessions.create({
+          ui_mode: 'embedded' as any,
           payment_method_types: ['card'],
           line_items: transactionResult.lineItems.map((item) => ({
             price_data: {
@@ -150,15 +151,14 @@ export async function POST(req: NextRequest) {
             quantity: item.quantity,
           })),
           mode: 'payment',
-          success_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${transactionResult.orderId}`,
-          cancel_url: `${origin}/shop`,
+          return_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${transactionResult.orderId}`,
           metadata: {
             orderId: transactionResult.orderId,
             userId,
           },
         });
 
-        redirectUrl = session.url;
+        clientSecret = session.client_secret;
         stripeSessionId = session.id;
 
         await prisma.order.update({
@@ -173,12 +173,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (redirectUrl) {
+    if (clientSecret) {
       return NextResponse.json({
         success: true,
         orderId: transactionResult.orderId,
         totalAmountCents: transactionResult.totalAmountCents,
-        redirectUrl: redirectUrl,
+        clientSecret: clientSecret,
         stripePaymentIntentId: stripeSessionId,
       }, { status: 201 });
     }

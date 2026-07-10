@@ -66,8 +66,9 @@ export function CartDrawer({ userId }: CartDrawerProps) {
         throw new Error(data.error || 'Checkout failed');
       }
 
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
+      if (data.clientSecret) {
+        clearCart();
+        window.location.href = `/checkout?client_secret=${data.clientSecret}`;
         return;
       }
 
