@@ -31,7 +31,10 @@ const nextConfig = {
   experimental: {
     outputFileTracingRoot: path.join(process.cwd(), '../../'),
     outputFileTracingIncludes: {
-      '/**/*': ['../../packages/database/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node'],
+      '/**/*': [
+        '../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+        '../../node_modules/.pnpm/prisma@*/node_modules/prisma/libquery_engine-rhel-openssl-3.0.x.so.node',
+      ],
     },
   },
   async headers() {
