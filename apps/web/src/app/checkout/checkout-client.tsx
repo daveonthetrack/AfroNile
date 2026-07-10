@@ -26,7 +26,7 @@ export function CheckoutClient({ clientSecret, publishableKey }: CheckoutClientP
         const stripe = await loadStripe(publishableKey);
         if (!stripe || !active) return;
 
-        const checkout = await (stripe as any).initEmbeddedCheckout({
+        const checkout = await (stripe as any).createEmbeddedCheckoutPage({
           clientSecret,
         });
 
