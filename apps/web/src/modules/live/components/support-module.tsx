@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Apple, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles, CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { loadStripe } from '@stripe/stripe-js';
 import { SUPPORT_TIERS } from '../constants';
 
 interface SupportModuleProps {
@@ -33,10 +34,57 @@ export function SupportModule({
   setComment,
 }: SupportModuleProps) {
   const router = useRouter();
-  const [loadingType, setLoadingType] = useState<'CARD' | 'CASHAPP' | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Stripe Embedded states
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+  const checkoutContainerRef = useRef<HTMLDivElement>(null);
+  const checkoutInstanceRef = useRef<any>(null);
 
-  const handleSupportSubmit = async (paymentType: 'CARD' | 'CASHAPP') => {
+  useEffect(() => {
+    if (!stripeClientSecret || !checkoutContainerRef.current) return;
+
+    let active = true;
+
+    async function initializeEmbeddedCheckout() {
+      try {
+        const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
+        const stripe = await loadStripe(publishableKey);
+        if (!stripe || !active) return;
+
+        const checkout = await (stripe as any).createEmbeddedCheckoutPage({
+          clientSecret: stripeClientSecret,
+        });
+
+        if (active) {
+          checkout.mount(checkoutContainerRef.current);
+          checkoutInstanceRef.current = checkout;
+          
+          // Smooth scroll to the checkout portal after rendering
+          setTimeout(() => {
+            checkoutContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 200);
+        }
+      } catch (err: any) {
+        console.error('Failed to initialize embedded Stripe Checkout locally:', err);
+        if (active) {
+          setError(err.message || 'Could not load payment form.');
+        }
+      }
+    }
+
+    initializeEmbeddedCheckout();
+
+    return () => {
+      active = false;
+      if (checkoutInstanceRef.current) {
+        checkoutInstanceRef.current.destroy();
+      }
+    };
+  }, [stripeClientSecret]);
+
+  const handleSupportSubmit = async () => {
     setError(null);
     let finalAmountCents = 0;
 
@@ -56,7 +104,7 @@ export function SupportModule({
       return;
     }
 
-    setLoadingType(paymentType);
+    setLoading(true);
 
     try {
       const payload = {
@@ -65,7 +113,7 @@ export function SupportModule({
         email: email.trim(),
         phone: phone.trim() || null,
         comment: comment.trim() || null,
-        paymentType,
+        paymentType: 'CARD', // default wrapper
       };
 
       const res = await fetch('/api/live/support', {
@@ -80,7 +128,7 @@ export function SupportModule({
       }
 
       if (data.clientSecret) {
-        window.location.href = `/checkout?client_secret=${data.clientSecret}`;
+        setStripeClientSecret(data.clientSecret);
       } else {
         // Demo Mode Fallback: Simulated network check-in latency
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -90,7 +138,7 @@ export function SupportModule({
       console.error('Support backing failed:', err);
       setError(err.message || 'An error occurred.');
     } finally {
-      setLoadingType(null);
+      setLoading(false);
     }
   };
 
@@ -108,7 +156,7 @@ export function SupportModule({
     <div className="space-y-6 max-w-sm mx-auto select-none text-left">
       
       {error && (
-        <div className="p-3 text-[11px] font-mono text-center text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl uppercase tracking-wider">
+        <div className="p-3 text-[11px] font-mono text-center text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl uppercase tracking-wider animate-in fade-in duration-200">
           {error}
         </div>
       )}
@@ -125,6 +173,7 @@ export function SupportModule({
           placeholder="SHARE YOUR CONCERT EXPERIENCE OR VIBE..."
           rows={3}
           className="w-full bg-transparent border-0 text-xs font-mono font-medium placeholder-zinc-500/75 text-zinc-900 focus:outline-none resize-none uppercase"
+          disabled={!!stripeClientSecret}
         />
       </div>
 
@@ -138,6 +187,7 @@ export function SupportModule({
             onChange={(e) => setEmail(e.target.value)}
             placeholder="YOUR EMAIL"
             className="w-full h-10 px-4 rounded-full bg-black/[0.04] border border-black/10 focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-mono text-zinc-900 focus:outline-none uppercase placeholder-zinc-500/65 focus:bg-white transition-all duration-200"
+            disabled={!!stripeClientSecret}
           />
           <input
             type="tel"
@@ -145,6 +195,7 @@ export function SupportModule({
             onChange={(e) => setPhone(e.target.value)}
             placeholder="YOUR PHONE NUMBER"
             className="w-full h-10 px-4 rounded-full bg-black/[0.04] border border-black/10 focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-mono text-zinc-900 focus:outline-none uppercase placeholder-zinc-500/65 focus:bg-white transition-all duration-200"
+            disabled={!!stripeClientSecret}
           />
         </div>
       </div>
@@ -166,6 +217,7 @@ export function SupportModule({
             return (
               <button
                 key={amount}
+                disabled={!!stripeClientSecret}
                 onClick={() => {
                   setSelectedTier(amount);
                   setCustomAmount('');
@@ -174,7 +226,7 @@ export function SupportModule({
                 className={`h-15 rounded-2xl flex flex-col justify-center items-center border transition-all duration-300 relative ${
                   isSelected
                     ? 'bg-white border-white text-black scale-105 shadow-[0_8px_20px_-4px_rgba(245,158,11,0.3)] ring-2 ring-primary z-10'
-                    : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:border-white/25 hover:scale-102 hover:text-white'
+                    : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:border-white/25 hover:scale-102 hover:text-white disabled:opacity-50'
                 }`}
               >
                 <span className="text-xs font-black font-mono tracking-tight">${amount}</span>
@@ -202,55 +254,39 @@ export function SupportModule({
             setSelectedTier(null);
             setError(null);
           }}
+          disabled={!!stripeClientSecret}
           placeholder="OR ENTER CUSTOM AMOUNT..."
-          className="w-full h-10 pl-7 pr-4 rounded-xl bg-zinc-900/50 border border-white/5 focus:border-primary/50 text-[10px] text-white focus:outline-none transition-all font-mono uppercase group-hover:border-white/10"
+          className="w-full h-10 pl-7 pr-4 rounded-xl bg-zinc-900/50 border border-white/5 focus:border-primary/50 text-[10px] text-white focus:outline-none transition-all font-mono uppercase group-hover:border-white/10 disabled:opacity-50"
         />
       </div>
 
-      {/* Stacked Direct Payment Buttons (Official Brand Colors & Designs) */}
-      <div className="space-y-3 pt-3">
-        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block font-mono px-1">Complete Support</span>
-
-        {/* 1. Official Apple Pay Button */}
+      {/* Single Contribute Trigger */}
+      <div className="pt-3">
         <button
-          onClick={() => handleSupportSubmit('CARD')}
-          disabled={loadingType !== null}
-          className="w-full h-12 bg-black hover:bg-zinc-950 text-white rounded-2xl font-bold text-sm transition-all active:scale-98 flex items-center justify-center gap-1.5 border border-white/10 shadow-lg"
+          onClick={handleSupportSubmit}
+          disabled={loading || !!stripeClientSecret}
+          className="w-full h-12 bg-primary hover:bg-primary/95 text-white rounded-full font-bold text-sm transition-all active:scale-98 flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
         >
-          {loadingType === 'CARD' ? (
+          {loading ? (
             <div className="flex items-center gap-2">
               <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span className="text-xs uppercase font-mono tracking-widest text-zinc-400">Authorizing...</span>
+              <span className="text-xs uppercase font-mono tracking-widest text-zinc-300">Generating Portal...</span>
             </div>
           ) : (
             <>
-              <Apple className="h-5.5 w-5.5 fill-current -mt-0.5" />
-              <span className="text-base font-semibold tracking-tight">Pay</span>
-            </>
-          )}
-        </button>
-
-        {/* 2. Official Cash App Button */}
-        <button
-          onClick={() => handleSupportSubmit('CASHAPP')}
-          disabled={loadingType !== null}
-          className="w-full h-12 bg-[#00D632] hover:bg-[#00c02c] text-white rounded-2xl font-bold text-sm transition-all active:scale-98 flex items-center justify-center gap-2 shadow-lg"
-        >
-          {loadingType === 'CASHAPP' ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span className="text-xs uppercase font-mono tracking-widest text-emerald-100">Connecting...</span>
-            </div>
-          ) : (
-            <>
-              <div className="bg-white rounded-[5px] h-5 w-5 flex items-center justify-center">
-                <span className="text-[#00D632] font-mono text-sm font-black">$</span>
-              </div>
-              <span className="text-base font-bold tracking-tight">Cash App</span>
+              <CreditCard className="h-4 w-4" />
+              <span>Contribute Cairo Waves</span>
             </>
           )}
         </button>
       </div>
+
+      {/* Expandable Embedded Stripe Form */}
+      {stripeClientSecret && (
+        <div className="bg-zinc-950/65 border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl relative min-h-[350px] animate-in slide-in-from-top duration-500 mt-6">
+          <div ref={checkoutContainerRef} id="checkout" className="w-full transition-opacity duration-300" />
+        </div>
+      )}
 
     </div>
   );
