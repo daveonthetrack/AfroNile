@@ -1,3 +1,5 @@
+import path from 'path';
+
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -26,6 +28,9 @@ const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   transpilePackages: ['@repo/auth'],
+  experimental: {
+    outputFileTracingRoot: path.join(process.cwd(), '../../'),
+  },
   async headers() {
     return [
       {
