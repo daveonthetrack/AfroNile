@@ -105,6 +105,17 @@ export function NavigationBar({ user }: NavigationBarProps) {
 
         {/* Right Section: User Controls */}
         <div className="hidden md:flex items-center gap-4">
+          <Link
+            href="/live"
+            className="h-9 px-3.5 flex items-center justify-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/50 text-xs font-bold text-red-400 hover:text-red-300 transition-all select-none"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+            <span>LIVE</span>
+          </Link>
+
           {/* Shopping Cart Trigger */}
           <button
             onClick={() => setIsOpen(true)}
@@ -201,6 +212,17 @@ export function NavigationBar({ user }: NavigationBarProps) {
 
         {/* Mobile Navigation Menu Button */}
         <div className="flex md:hidden items-center gap-2">
+          <Link
+            href="/live"
+            className="h-8 px-2.5 flex items-center justify-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/50 text-[10px] font-bold text-red-400 hover:text-red-300 transition-all select-none mr-1"
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+            </span>
+            <span>LIVE</span>
+          </Link>
+
           {/* Mobile Shopping Cart Trigger */}
           <button
             onClick={() => setIsOpen(true)}
