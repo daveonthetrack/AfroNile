@@ -79,8 +79,8 @@ export function SupportModule({
         throw new Error(data.error || 'Failed to submit backing.');
       }
 
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
+      if (data.clientSecret) {
+        window.location.href = `/checkout?client_secret=${data.clientSecret}`;
       } else {
         // Demo Mode Fallback: Simulated network check-in latency
         await new Promise((resolve) => setTimeout(resolve, 1500));

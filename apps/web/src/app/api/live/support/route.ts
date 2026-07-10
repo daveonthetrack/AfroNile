@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    let redirectUrl: string | null = null;
+    let clientSecret: string | null = null;
     let stripeSessionId = '';
 
     const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
         const origin = req.headers.get('origin') || 'http://localhost:3000';
 
         const session = await stripe.checkout.sessions.create({
+          ui_mode: 'embedded' as any,
           payment_method_types: ['card', 'cashapp'],
           line_items: [
             {
@@ -78,8 +79,7 @@ export async function POST(req: NextRequest) {
             },
           ],
           mode: 'payment',
-          success_url: `${origin}/live/memory/${contribution.id}?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/live`,
+          return_url: `${origin}/live/memory/${contribution.id}?session_id={CHECKOUT_SESSION_ID}`,
           customer_email: email.trim(),
           metadata: {
             contributionId: contribution.id,
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         });
 
         stripeSessionId = session.id;
-        redirectUrl = session.url;
+        clientSecret = session.client_secret;
 
         // Update database with the actual Stripe session ID
         await prisma.supportContribution.update({
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       contributionId: contribution.id,
-      redirectUrl: redirectUrl, // null signals Demo Mode fallback
+      clientSecret: clientSecret, // null signals Demo Mode fallback
       stripeSessionId: stripeSessionId,
     }, { status: 201 });
 

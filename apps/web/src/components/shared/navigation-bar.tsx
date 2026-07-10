@@ -49,6 +49,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
     { label: 'Music', href: '/music' },
     { label: 'Tour', href: '/tour' },
     { label: 'Shop', href: '/shop' },
+    { label: 'Live', href: '/live' },
     { label: 'News', href: '/news' },
   ];
 
