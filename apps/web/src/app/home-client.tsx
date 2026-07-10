@@ -73,8 +73,9 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
 
   const handleAddAlbumToCart = (album: typeof albums[number]) => {
     const albumSku = `ALBUM_${album.id}`;
+    const product = products.find((p) => p.sku === albumSku);
     addItem({
-      id: album.id,
+      id: product ? product.id : albumSku,
       title: `${album.title} (Digital Album)`,
       priceCents: album.priceCents,
       sku: albumSku,
