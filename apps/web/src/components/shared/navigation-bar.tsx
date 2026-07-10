@@ -12,7 +12,6 @@ import {
   LogOut, 
   Menu, 
   X,
-  Compass,
   ShoppingCart
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -63,7 +62,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
             href="/" 
             className="flex items-center gap-2 text-white font-extrabold text-xl tracking-wider select-none hover:opacity-90 transition-opacity"
           >
-            <Compass className="h-6 w-6 text-primary" />
+            <img src="/Logo_transparent.png" alt="AfroNile Logo" className="h-8 w-8 object-contain" />
             <span>AFRONILE</span>
           </Link>
         </div>
