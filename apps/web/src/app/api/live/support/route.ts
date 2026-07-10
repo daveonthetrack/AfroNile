@@ -51,10 +51,11 @@ export async function POST(req: NextRequest) {
     let redirectUrl: string | null = null;
     let stripeSessionId = '';
 
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
     // If Stripe secret key exists, create a real hosted Checkout Session
-    if (process.env.STRIPE_SECRET_KEY) {
+    if (secretKey) {
       try {
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        const stripe = new Stripe(secretKey, {
           apiVersion: '2024-04-10' as any,
         });
 

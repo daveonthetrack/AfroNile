@@ -37,8 +37,9 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Verify Stripe payment status
-    if (sessionId && process.env.STRIPE_SECRET_KEY) {
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+    if (sessionId && secretKey) {
+      const stripe = new Stripe(secretKey, {
         apiVersion: '2024-04-10' as any,
       });
 

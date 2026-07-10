@@ -125,9 +125,10 @@ export async function POST(req: NextRequest) {
     let redirectUrl: string | null = null;
     let stripeSessionId: string | null = null;
 
-    if (process.env.STRIPE_SECRET_KEY) {
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+    if (secretKey) {
       try {
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        const stripe = new Stripe(secretKey, {
           apiVersion: '2024-04-10' as any,
         });
 
