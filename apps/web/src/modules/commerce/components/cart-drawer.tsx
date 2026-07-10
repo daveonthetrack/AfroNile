@@ -249,13 +249,26 @@ export function CartDrawer({ userId }: CartDrawerProps) {
                 <span className="text-lg font-bold text-white tabular-nums">{formatPrice(getCartTotal())}</span>
               </div>
               
-              <button
-                onClick={handleCheckout}
-                className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition active:scale-95"
-              >
-                <CreditCard className="h-4 w-4" />
-                <span>Confirm Purchase</span>
-              </button>
+              {userId ? (
+                <button
+                  onClick={handleCheckout}
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition active:scale-95"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>Confirm Purchase</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+                  }}
+                  className="w-full h-11 bg-zinc-900 border border-white/10 hover:bg-white/5 hover:border-white/20 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>Sign In to Checkout</span>
+                </button>
+              )}
               
               <div className="text-[10px] text-zinc-600 text-center">
                 Secure SSL checkouts. Tickets generated immediately upon payment approval.
