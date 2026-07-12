@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
-import { verifyToken } from '@repo/auth';
 import Stripe from 'stripe';
+import { verifyAdminFromRequest } from '@/lib/auth';
+import { getStripeSecretKey } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-artist-monolith';
-
 export async function POST(req: NextRequest) {
   try {
-    // 1. Authenticate admin
-    const token = req.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-    }
-    const payload = verifyToken(token, JWT_SECRET) as any;
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!verifyAdminFromRequest(req)) {
       return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
     }
 
-    const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
-    if (!secretKey) {
-      return NextResponse.json({ error: 'Stripe secret key configuration is missing.' }, { status: 400 });
-    }
+    const secretKey = getStripeSecretKey();
 
     const stripe = new Stripe(secretKey, {
       apiVersion: '2024-04-10' as any,

@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import AdminDashboardClient from './admin-dashboard-client';
+import { verifyToken } from '@repo/auth';
+import { getJwtSecret } from '@/lib/env';
 
 export default async function AdminPage() {
   const token = cookies().get('token')?.value;
@@ -12,14 +14,8 @@ export default async function AdminPage() {
   }
 
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error('Malformed token.');
-    }
-    const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const decoded = JSON.parse(atob(payloadBase64));
-
-    if (decoded.role !== 'ADMIN') {
+    const decoded = verifyToken(token, getJwtSecret());
+    if (!decoded || decoded.role !== 'ADMIN') {
       redirect('/?error=UNAUTHORIZED_ACCESS');
     }
   } catch (e) {
@@ -29,3 +25,4 @@ export default async function AdminPage() {
 
   return <AdminDashboardClient />;
 }
+

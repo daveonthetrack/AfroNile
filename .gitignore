@@ -38,3 +38,7 @@ pnpm-debug.log*
 *.sln
 *.sw?
 .vercel
+
+# Admin-uploaded assets (generated at runtime)
+apps/web/public/uploads/*
+!apps/web/public/uploads/.gitkeep

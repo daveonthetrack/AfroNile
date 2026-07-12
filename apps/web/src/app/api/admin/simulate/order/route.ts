@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import { verifyToken } from '@repo/auth';
 import crypto from 'crypto';
+import { getJwtSecret, isProduction } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-artist-monolith';
-
 export async function POST(req: NextRequest) {
+  if (isProduction()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   try {
     // 1. Authenticate admin
     const token = req.cookies.get('token')?.value;
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
-    const payload = verifyToken(token, JWT_SECRET) as any;
+    const payload = verifyToken(token, getJwtSecret());
     if (!payload || payload.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
     }

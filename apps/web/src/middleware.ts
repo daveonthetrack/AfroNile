@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyTokenEdge } from '@repo/auth';
+import { getJwtSecret } from './lib/env';
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Block direct access to audio files — streaming requires signed proxy URL
+  if (pathname.startsWith('/audio/')) {
+    return new NextResponse('Direct audio access is not permitted.', { status: 403 });
+  }
 
   // Protect the admin and staff routes
   if (pathname.startsWith('/verify') || pathname.startsWith('/admin')) {
@@ -14,14 +21,11 @@ export function middleware(req: NextRequest) {
     }
 
     try {
-      // Decode JWT payload in an Edge-safe manner using native atob
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        throw new Error('Malformed token claims.');
+      // Validate cryptographic JWT signature
+      const claims = await verifyTokenEdge(token, getJwtSecret());
+      if (!claims) {
+        throw new Error('Invalid or expired token signature.');
       }
-      
-      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const claims = JSON.parse(atob(payloadBase64));
 
       // Assert role permissions
       if (pathname.startsWith('/admin')) {
@@ -42,7 +46,10 @@ export function middleware(req: NextRequest) {
       console.error('Middleware security validation failed:', e);
       const url = new URL('/login', req.url);
       url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      
+      const response = NextResponse.redirect(url);
+      response.cookies.delete('token');
+      return response;
     }
   }
 
@@ -51,7 +58,9 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/audio/:path*',
     '/verify/:path*',
-    '/admin/:path*'
+    '/admin/:path*',
   ],
 };
+

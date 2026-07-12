@@ -81,6 +81,7 @@ export default async function HomePage() {
         priceCents: p.priceCents,
         sku: p.sku,
         stockQuantity: p.stockQuantity,
+        imageUrl: p.imageUrl,
       }))}
     />
   );

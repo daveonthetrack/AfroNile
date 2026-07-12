@@ -19,6 +19,7 @@ export default async function ShopPage() {
         priceCents: p.priceCents,
         sku: p.sku,
         stockQuantity: p.stockQuantity,
+        imageUrl: p.imageUrl,
       }))}
     />
   );

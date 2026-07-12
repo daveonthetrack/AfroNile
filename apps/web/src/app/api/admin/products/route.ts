@@ -1,28 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
-import { cookies } from 'next/headers';
-
-async function verifyAdmin(): Promise<boolean> {
-  const token = cookies().get('token')?.value;
-  if (!token) return false;
-  try {
-    const parts = token.split('.');
-    if (parts.length === 3) {
-      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const decoded = JSON.parse(atob(payloadBase64));
-      return decoded.role === 'ADMIN';
-    }
-  } catch (e) {}
-  return false;
-}
+import { verifyAdminFromCookies } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await verifyAdmin())) {
+    if (!(await verifyAdminFromCookies())) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
-    const { type, title, priceCents, sku, stockQuantity } = await req.json();
+    const { type, title, priceCents, sku, stockQuantity, imageUrl } = await req.json();
 
     if (!type || !title?.trim() || typeof priceCents !== 'number' || !sku?.trim() || typeof stockQuantity !== 'number') {
       return NextResponse.json({ error: 'MISSING_OR_INVALID_FIELDS' }, { status: 400 });
@@ -41,6 +27,7 @@ export async function POST(req: NextRequest) {
         priceCents,
         sku: sku.trim(),
         stockQuantity,
+        imageUrl: imageUrl?.trim() || null,
       },
     });
 
@@ -53,11 +40,11 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    if (!(await verifyAdmin())) {
+    if (!(await verifyAdminFromCookies())) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
-    const { id, type, title, priceCents, sku, stockQuantity } = await req.json();
+    const { id, type, title, priceCents, sku, stockQuantity, imageUrl } = await req.json();
 
     if (!id || !type || !title?.trim() || typeof priceCents !== 'number' || !sku?.trim() || typeof stockQuantity !== 'number') {
       return NextResponse.json({ error: 'MISSING_OR_INVALID_FIELDS' }, { status: 400 });
@@ -82,6 +69,7 @@ export async function PUT(req: NextRequest) {
         priceCents,
         sku: sku.trim(),
         stockQuantity,
+        imageUrl: imageUrl?.trim() || null,
       },
     });
 
@@ -94,7 +82,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    if (!(await verifyAdmin())) {
+    if (!(await verifyAdminFromCookies())) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 

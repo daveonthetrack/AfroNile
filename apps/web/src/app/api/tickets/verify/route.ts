@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
+import { verifyToken } from '@repo/auth';
+import { getJwtSecret } from '@/lib/env';
 
 interface VerificationRequest {
   qrCodeHash: string;
@@ -7,6 +9,25 @@ interface VerificationRequest {
 
 export async function POST(req: NextRequest) {
   try {
+    // Authenticate scanner staff/admin session
+    const token = req.cookies.get('token')?.value;
+    if (!token) {
+      return NextResponse.json({
+        approved: false,
+        error: 'UNAUTHORIZED',
+        message: 'Authentication session token is missing.',
+      }, { status: 401 });
+    }
+
+    const decoded = verifyToken(token, getJwtSecret());
+    if (!decoded || (decoded.role !== 'ADMIN' && decoded.role !== 'STAFF')) {
+      return NextResponse.json({
+        approved: false,
+        error: 'FORBIDDEN',
+        message: 'Access denied. Concert Staff authorization required.',
+      }, { status: 403 });
+    }
+
     const body: VerificationRequest = await req.json();
     const { qrCodeHash } = body;
 

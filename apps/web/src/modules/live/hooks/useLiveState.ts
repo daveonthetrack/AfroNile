@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LiveStatusResponse, LiveFeedItem } from '../types';
-import { MOCK_FEED_EVENTS } from '../constants';
 
 export function useLiveState(initialEventId?: string) {
   const searchParams = useSearchParams();
@@ -18,27 +17,41 @@ export function useLiveState(initialEventId?: string) {
   const songParam = searchParams.get('song');
   const sourceParam = searchParams.get('source');
 
-  // 1. Fetch live status periodically
+  // 1. Connect to SSE event stream
   useEffect(() => {
-    async function fetchStatus() {
+    const eventSource = new EventSource('/api/live/stream');
+
+    eventSource.onmessage = (event) => {
       try {
-        const res = await fetch('/api/live/status');
-        if (res.ok) {
-          const data: LiveStatusResponse = await res.json();
-          // If songParam overrides the default track, we adjust
-          if (songParam && data.currentSong) {
-            data.currentSong.id = songParam;
+        const data = JSON.parse(event.data);
+        if (data.liveStatus) {
+          if (songParam && data.liveStatus.currentSong) {
+            data.liveStatus.currentSong.id = songParam;
           }
-          setLiveStatus(data);
+          setLiveStatus(data.liveStatus);
+        }
+
+        if (Array.isArray(data.comments)) {
+          const items: LiveFeedItem[] = data.comments.map((c: any) => ({
+            id: c.id,
+            type: 'SUPPORT',
+            text: `Vibe: "${c.comment}"`,
+            timestamp: new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }));
+          setFeedItems(items.slice(0, 5));
         }
       } catch (err) {
-        console.error('Failed to poll live status:', err);
+        console.error('Failed to parse SSE payload:', err);
       }
-    }
+    };
 
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 3000); // Poll every 3s
-    return () => clearInterval(interval);
+    eventSource.onerror = (err) => {
+      console.error('EventSource connection error:', err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, [songParam]);
 
   // 2. Perform background check-in when show QR parameter is matched
@@ -71,58 +84,6 @@ export function useLiveState(initialEventId?: string) {
 
     triggerCheckIn();
   }, [showParam, initialEventId]);
-
-  // 3. Populate and roll mock feed items simulating SSE/WebSockets
-  useEffect(() => {
-    // Initial static items
-    const initialItems: LiveFeedItem[] = [
-      {
-        id: '1',
-        type: 'SUPPORT',
-        text: 'A fan just supported tonight’s performance.',
-        timestamp: 'Just now',
-      },
-      {
-        id: '2',
-        type: 'MERCHANDISE',
-        text: 'Someone purchased the Nile Waves Tour Tee.',
-        timestamp: '2m ago',
-      },
-      {
-        id: '3',
-        type: 'ALBUM',
-        text: 'A fan just purchased the Nile Waves digital album.',
-        timestamp: '5m ago',
-      },
-    ];
-    setFeedItems(initialItems);
-
-    const feedInterval = setInterval(() => {
-      const randomEventText = MOCK_FEED_EVENTS[Math.floor(Math.random() * MOCK_FEED_EVENTS.length)];
-      const newItem: LiveFeedItem = {
-        id: Math.random().toString(36).substring(2, 9),
-        type: randomEventText.includes('purchase') || randomEventText.includes('Tee') || randomEventText.includes('vinyl')
-          ? 'MERCHANDISE'
-          : randomEventText.includes('album')
-          ? 'ALBUM'
-          : 'SUPPORT',
-        text: randomEventText,
-        timestamp: 'Just now',
-      };
-
-      setFeedItems((prev) => {
-        // Keep only the 5 most recent feed items
-        const updated = [newItem, ...prev.map(item => {
-          if (item.timestamp === 'Just now') return { ...item, timestamp: '1m ago' };
-          if (item.timestamp === '1m ago') return { ...item, timestamp: '3m ago' };
-          return { ...item, timestamp: '5m ago' };
-        })];
-        return updated.slice(0, 5);
-      });
-    }, 12000); // Add item every 12s
-
-    return () => clearInterval(feedInterval);
-  }, []);
 
   return {
     liveStatus,

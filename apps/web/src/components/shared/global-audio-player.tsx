@@ -41,18 +41,41 @@ export function GlobalAudioPlayer() {
     setMounted(true);
   }, []);
 
-  // Sync audio source
+  // Sync audio source and fetch signed stream URL dynamically
   useEffect(() => {
     if (!audioRef.current) return;
+    let active = true;
+
     if (currentTrack) {
-      audioRef.current.src = currentTrack.audioUrl;
-      audioRef.current.load();
-      if (isPlaying) {
-        audioRef.current.play().catch(() => setPlaying(false));
+      async function loadSecureTrack() {
+        try {
+          const res = await fetch(`/api/audio/${currentTrack!.id}`);
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.message || 'Access denied.');
+          }
+          const data = await res.json();
+          if (active && data.success && data.streamUrl) {
+            audioRef.current!.src = data.streamUrl;
+            audioRef.current!.load();
+            if (isPlaying) {
+              audioRef.current!.play().catch(() => setPlaying(false));
+            }
+          }
+        } catch (err: any) {
+          console.error('Failed to load secure audio track:', err);
+          alert(`Playback Error: ${err.message || 'You must purchase the album to stream this track.'}`);
+          setPlaying(false);
+        }
       }
+      loadSecureTrack();
     } else {
       audioRef.current.pause();
     }
+
+    return () => {
+      active = false;
+    };
   }, [currentTrack]);
 
   // Sync play/pause state
@@ -108,7 +131,7 @@ export function GlobalAudioPlayer() {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 h-20 max-w-5xl w-[calc(100%-3rem)] rounded-full border border-white/5 bg-zinc-950/65 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] px-6 flex items-center justify-between transition-all duration-300 hover:border-white/10">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 h-20 max-w-5xl w-[calc(100%-2rem)] rounded-full glass-card shadow-[0_20px_50px_rgba(0,0,0,0.6)] px-6 flex items-center justify-between transition-all duration-300 hover:border-white/10 select-none">
       <audio
         ref={audioRef}
         onTimeUpdate={() => {
@@ -138,18 +161,18 @@ export function GlobalAudioPlayer() {
               )}
             </div>
             <div className="ml-3 min-w-0">
-              <h4 className="truncate text-sm font-semibold text-white tracking-tight leading-none mb-1">{currentTrack.title}</h4>
-              <p className="truncate text-[10px] font-medium text-zinc-400">{currentTrack.artistName}</p>
+              <h4 className="truncate text-xs font-bold text-white tracking-tight leading-none mb-1">{currentTrack.title}</h4>
+              <p className="truncate text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">{currentTrack.artistName}</p>
             </div>
           </>
         ) : (
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/5 bg-zinc-950">
-              <Music className="h-4.5 w-4.5 text-zinc-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/5 bg-zinc-950/60">
+              <Music className="h-4 w-4 text-zinc-700" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-zinc-500 leading-none mb-1">No track loaded</p>
-              <p className="text-[10px] font-medium text-zinc-600">Select a song</p>
+              <p className="text-[10px] font-bold text-zinc-600 leading-none mb-1">NO TRACK</p>
+              <p className="text-[9px] font-semibold text-zinc-700">SELECT A SONG</p>
             </div>
           </div>
         )}
@@ -157,38 +180,38 @@ export function GlobalAudioPlayer() {
 
       {/* Middle Section: Controls & Progress */}
       <div className="flex flex-col items-center flex-1 max-w-xl px-4 w-1/2">
-        <div className="flex items-center gap-6 mb-2">
+        <div className="flex items-center gap-6 mb-1.5">
           <button 
             onClick={prevTrack} 
             disabled={!currentTrack}
-            className="text-zinc-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="text-zinc-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition duration-200"
           >
-            <SkipBack className="h-5 w-5" />
+            <SkipBack className="h-4.5 w-4.5" />
           </button>
           
           <button
             onClick={togglePlay}
             disabled={!currentTrack}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black hover:scale-105 active:scale-95 disabled:opacity-20 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all shadow-md"
           >
             {isPlaying ? (
-              <Pause className="h-5 w-5 fill-current" />
+              <Pause className="h-4 w-4 fill-current" />
             ) : (
-              <Play className="h-5 w-5 fill-current ml-0.5" />
+              <Play className="h-4 w-4 fill-current ml-0.5" />
             )}
           </button>
 
           <button 
             onClick={nextTrack} 
             disabled={!currentTrack}
-            className="text-zinc-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="text-zinc-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition duration-200"
           >
-            <SkipForward className="h-5 w-5" />
+            <SkipForward className="h-4.5 w-4.5" />
           </button>
         </div>
 
         {/* Timeline Slider */}
-        <div className="flex items-center w-full gap-3 text-xs text-zinc-500 select-none">
+        <div className="flex items-center w-full gap-3 text-[10px] font-mono text-zinc-500 select-none">
           <span className="tabular-nums">{formatTime(currentTime)}</span>
           <Slider.Root
             className="relative flex items-center select-none touch-none w-full h-4 group cursor-pointer"
@@ -198,11 +221,11 @@ export function GlobalAudioPlayer() {
             onValueChange={handleTimelineChange}
             disabled={!currentTrack}
           >
-            <Slider.Track className="bg-zinc-800 relative grow rounded-full h-1">
-              <Slider.Range className="absolute bg-primary rounded-full h-full group-hover:bg-primary" />
+            <Slider.Track className="bg-zinc-900 relative grow rounded-full h-1">
+              <Slider.Range className="absolute bg-primary rounded-full h-full shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
             </Slider.Track>
             <Slider.Thumb 
-              className="block w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity focus:outline-none ring-2 ring-primary" 
+              className="block w-2.5 h-2.5 bg-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity focus:outline-none ring-2 ring-primary" 
               aria-label="Progress"
             />
           </Slider.Root>
@@ -212,19 +235,19 @@ export function GlobalAudioPlayer() {
 
       {/* Right Section: Volume & Queue */}
       <div className="flex items-center justify-end gap-4 w-1/4">
-        <button className="text-zinc-400 hover:text-white transition md:block hidden">
-          <ListMusic className="h-5 w-5" />
+        <button className="text-zinc-500 hover:text-white transition md:block hidden">
+          <ListMusic className="h-4 w-4" />
         </button>
 
-        <div className="flex items-center gap-2 max-w-[120px] w-full">
+        <div className="flex items-center gap-2 max-w-[100px] w-full">
           <button 
             onClick={toggleMute}
-            className="text-zinc-400 hover:text-white transition"
+            className="text-zinc-500 hover:text-white transition"
           >
             {isMuted || volume === 0 ? (
-              <VolumeX className="h-5 w-5" />
+              <VolumeX className="h-4 w-4" />
             ) : (
-              <Volume2 className="h-5 w-5" />
+              <Volume2 className="h-4 w-4" />
             )}
           </button>
           
@@ -235,11 +258,11 @@ export function GlobalAudioPlayer() {
             step={0.01}
             onValueChange={handleVolumeChange}
           >
-            <Slider.Track className="bg-zinc-800 relative grow rounded-full h-1">
-              <Slider.Range className="absolute bg-zinc-200 rounded-full h-full" />
+            <Slider.Track className="bg-zinc-900 relative grow rounded-full h-1">
+              <Slider.Range className="absolute bg-zinc-300 rounded-full h-full" />
             </Slider.Track>
             <Slider.Thumb 
-              className="block w-2.5 h-2.5 bg-white rounded-full focus:outline-none ring-1 ring-white" 
+              className="block w-2 h-2 bg-white rounded-full focus:outline-none ring-1 ring-white" 
               aria-label="Volume"
             />
           </Slider.Root>

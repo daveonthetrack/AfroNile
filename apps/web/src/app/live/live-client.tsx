@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SupportModule } from '../../modules/live/components/support-module';
+import { useLiveState } from '../../modules/live/hooks/useLiveState';
+import { LiveHero } from '../../modules/live/components/live-hero';
+import { LivePlayer } from '../../modules/live/components/live-player';
+import { LiveFeed } from '../../modules/live/components/live-feed';
+import { UpcomingShows } from '../../modules/live/components/upcoming-shows';
+import { JourneyProgress } from '../../modules/live/components/journey-progress';
 
 interface LiveClientProps {
   albums: {
@@ -35,7 +41,7 @@ interface LiveClientProps {
   }[];
 }
 
-export function LiveClient({ events }: LiveClientProps) {
+export function LiveClient({ albums, events, products }: LiveClientProps) {
   const searchParams = useSearchParams();
   const nextShow = events[0] || null;
   const initialShowId = nextShow?.id || '';
@@ -43,12 +49,18 @@ export function LiveClient({ events }: LiveClientProps) {
   const [showSplash, setShowSplash] = useState(false);
   const [splashFade, setSplashFade] = useState(false);
 
+  // Connect to SSE event stream and sync live status
+  const { liveStatus, feedItems, checkedIn, checkingIn, checkInError } = useLiveState(initialShowId);
+
   // Form states lifted to handle interactive wave feedback
   const [selectedTier, setSelectedTier] = useState<number | null>(10);
   const [customAmount, setCustomAmount] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [comment, setComment] = useState('');
+
+  // Ticket product matching for next performance
+  const ticketProduct = products.find((p) => p.sku === `TICKET_${initialShowId}`) || null;
 
   // Play dynamic Entry Splash if launched from QR code scan (?show=...)
   useEffect(() => {
@@ -103,7 +115,7 @@ export function LiveClient({ events }: LiveClientProps) {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col justify-between max-w-sm mx-auto px-4 py-8 select-none relative overflow-hidden">
+    <div className="min-h-screen flex flex-col justify-between max-w-sm mx-auto px-4 py-8 select-none relative overflow-hidden text-left pt-20">
       
       {/* Dynamic radial glow that scales up brightness with backing amount */}
       <div className="absolute inset-x-0 bottom-0 h-48 pointer-events-none overflow-hidden z-0 transition-all duration-500">
@@ -132,7 +144,7 @@ export function LiveClient({ events }: LiveClientProps) {
             <div className="h-6 w-6 bg-primary rounded-full animate-pulse shadow-[0_0_15px_#f59e0b]" />
           </div>
           <div className="space-y-2 text-center">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em] block">Nile Waves Live Sync</span>
+            <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-[0.2em] block">Nile Waves Live Sync</span>
             <h2 className="text-xs font-bold text-white tracking-widest font-mono animate-pulse uppercase">
               SYNCING PERFORMANCE WAVES...
             </h2>
@@ -140,10 +152,37 @@ export function LiveClient({ events }: LiveClientProps) {
         </div>
       )}
 
-      {/* Header removed for focused visual flow */}
-
       {/* Main Focused Support & Onboarding Card stack */}
-      <main className="my-auto py-6 relative z-10">
+      <main className="my-auto py-6 relative z-10 w-full space-y-6">
+        {/* Check-in Error Alert banner */}
+        {checkInError && (
+          <div className="p-3 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl font-mono uppercase tracking-wider text-center">
+            Check-in Failed: {checkInError}
+          </div>
+        )}
+
+        {/* Live Performance Details & Check-In */}
+        <LiveHero
+          venueName={liveStatus?.venueName || nextShow?.venueName || 'Nile Arena'}
+          tourName={liveStatus?.tourName || nextShow?.title || 'Nile Waves Live'}
+          checkedIn={checkedIn}
+          checkingIn={checkingIn}
+        />
+
+        {/* Live Setlist Player Status */}
+        <LivePlayer
+          currentSong={liveStatus?.currentSong || null}
+          setlistProgress={liveStatus?.setlistProgress || { current: 1, total: 10 }}
+          albumCoverUrl={albums[0]?.coverImageUrl || '/placeholder.jpg'}
+        />
+
+        {/* Live Feed Activity */}
+        <LiveFeed items={feedItems} />
+
+        {/* Live Journey Progress / Momentum */}
+        <JourneyProgress />
+
+        {/* Support and Reflections Module */}
         <SupportModule 
           eventId={initialShowId}
           selectedTier={selectedTier}
@@ -157,17 +196,20 @@ export function LiveClient({ events }: LiveClientProps) {
           comment={comment}
           setComment={setComment}
         />
+
+        {/* Next shows block */}
+        <UpcomingShows events={events} ticketProduct={ticketProduct} />
       </main>
 
-      {/* Glowing Cairo Soundwave Line visual footer (Reacts to selections!) */}
-      <footer className="w-full relative py-2 pt-4 z-10">
+      {/* Glowing Cairo Soundwave Line visual footer */}
+      <footer className="w-full relative py-2 pt-4 z-10 shrink-0">
         <svg className="w-full h-8 stroke-[1.5] transition-all duration-300" viewBox="0 0 100 20" fill="none">
           <defs>
             <linearGradient id="cairoWaveGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="#d4af37" stopOpacity="0.05" />
               <stop 
                 offset="50%" 
-                stopColor={selectedTier === 50 ? "#f59e0b" : selectedTier === 20 ? "#ec4899" : "#f59e0b"} 
+                stopColor={selectedTier === 50 ? "#d4af37" : selectedTier === 20 ? "#ec4899" : "#d4af37"} 
                 stopOpacity="0.9" 
               />
               <stop offset="100%" stopColor="#ec4899" stopOpacity="0.9" />

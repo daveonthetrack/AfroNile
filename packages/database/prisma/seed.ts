@@ -3,7 +3,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding with real production data...');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Database seed must not run in production.');
+  }
+
+  console.log('🌱 Starting database seeding (development only)...');
 
   // 0. Clean up existing data to ensure idempotency
   await prisma.orderItem.deleteMany({});
@@ -78,6 +82,18 @@ async function main() {
       email: 'user@afronile.com',
       passwordHash: '$2a$10$yTIWdSLSG6NiBQk3UB6S.e2hVnYXLtkNfbWUxRz1iP7kNWWfT8Hme',
       roleId: userRole.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'staff@afronile.com' },
+    update: {
+      passwordHash: '$2a$10$yTIWdSLSG6NiBQk3UB6S.e2hVnYXLtkNfbWUxRz1iP7kNWWfT8Hme',
+    },
+    create: {
+      email: 'staff@afronile.com',
+      passwordHash: '$2a$10$yTIWdSLSG6NiBQk3UB6S.e2hVnYXLtkNfbWUxRz1iP7kNWWfT8Hme',
+      roleId: staffRole.id,
     },
   });
 

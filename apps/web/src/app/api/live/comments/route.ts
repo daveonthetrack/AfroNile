@@ -9,16 +9,17 @@ export async function GET() {
       where: {
         AND: [
           { comment: { not: null } },
-          { comment: { not: '' } }
-        ]
+          { comment: { not: '' } },
+          { stripeSessionId: { not: null } },
+          { NOT: { stripeSessionId: { startsWith: 'mock_stripe_session_' } } },
+          { NOT: { stripeSessionId: { startsWith: 'pending_' } } },
+        ],
       },
       orderBy: { createdAt: 'desc' },
       take: 30,
       select: {
         id: true,
         comment: true,
-        email: true,
-        phone: true,
         createdAt: true,
         amountCents: true,
       },

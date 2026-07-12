@@ -118,30 +118,40 @@ export function TicketsClient({ tickets }: TicketsClientProps) {
                   </div>
                 </div>
 
-                {/* Hash Details Block */}
-                <div className="bg-zinc-950 p-4 rounded-2xl border border-white/5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block">Cryptographic Hash</span>
-                    <button
-                      onClick={() => handleCopy(ticket.qrCodeHash, index)}
-                      className="text-zinc-500 hover:text-white transition p-1 hover:bg-white/5 rounded-md flex items-center gap-1 text-[10px]"
-                    >
-                      {copiedIndex === index ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-emerald-400" />
-                          <span className="text-emerald-400">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3.5 w-3.5" />
-                          <span>Copy Hash</span>
-                        </>
-                      )}
-                    </button>
+                {/* QR Code and Hash Details Block */}
+                <div className="bg-zinc-950 p-5 rounded-2xl border border-white/5 space-y-4">
+                  <div className="flex justify-center bg-white p-3 rounded-xl max-w-[150px] mx-auto">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=000000&bgcolor=ffffff&data=${encodeURIComponent(ticket.qrCodeHash)}`}
+                      alt="Concert Ticket QR Code"
+                      className="w-32 h-32 object-contain"
+                    />
                   </div>
-                  <p className="text-[11px] font-mono text-zinc-400 break-all select-all pt-1 select-none leading-relaxed">
-                    {ticket.qrCodeHash}
-                  </p>
+                  
+                  <div className="border-t border-white/5 pt-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block">Ticket Hash</span>
+                      <button
+                        onClick={() => handleCopy(ticket.qrCodeHash, index)}
+                        className="text-zinc-500 hover:text-white transition p-1 hover:bg-white/5 rounded-md flex items-center gap-1 text-[10px]"
+                      >
+                        {copiedIndex === index ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            <span>Copy Hash</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-[10px] font-mono text-zinc-400 break-all select-all leading-relaxed text-center">
+                      {ticket.qrCodeHash}
+                    </p>
+                  </div>
                 </div>
               </div>
 

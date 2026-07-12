@@ -1,8 +1,14 @@
 import React from 'react';
 import { prisma } from '@repo/database';
 import { LiveClient } from './live-client';
+import type { Metadata } from 'next';
 
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: 'Concert Live Companion | AfroNile',
+  description: 'Connect with the live concert screen in real-time. Share your reflections, check in via QR, and support the performance live.',
+};
 
 export default async function LiveCompanionPage() {
   const artist = await prisma.artist.findFirst({

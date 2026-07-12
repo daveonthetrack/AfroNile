@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShieldCheck, 
   QrCode, 
   History, 
   ArrowRight, 
-  Search, 
-  ClipboardCheck,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Camera,
+  Keyboard
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -42,20 +42,13 @@ interface ScanLog {
 }
 
 export default function TicketVerificationPage() {
+  const [activeTab, setActiveTab] = useState<'camera' | 'manual'>('camera');
   const [qrHash, setQrHash] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanLog[]>([]);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
-  // List of mock ticket hashes from the database seed to help testing
-  const testHashes = [
-    { label: "Valid Ticket A (Unscanned)", hash: "e29e92823812234f9a0c8b671aef290e29e92823812234f9a0c8b671aef290a1" },
-    { label: "Valid Ticket B (Unscanned)", hash: "b51aef290e29e92823812234f9a0c8b67e29e92823812234f9a0c8b671aef290b2" },
-    { label: "Valid Ticket C (Unscanned)", hash: "c6aef290a29e92823812234f9a0c8b671aef290e29e92823812234f9a0c8b67c3" },
-    { label: "Invalid Format Hash", hash: "invalid-hash-12345" },
-    { label: "Non-Existent Valid Format Hash", hash: "0000000000000000000000000000000000000000000000000000000000000000" }
-  ];
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<any>(null);
 
   const handleVerify = async (hashToVerify: string) => {
     const targetHash = hashToVerify.trim();
@@ -94,6 +87,8 @@ export default function TicketVerificationPage() {
         ...prev
       ]);
 
+      // If approved, optionally play confirmation sound/vibe here
+
     } catch (err: any) {
       setResult({
         approved: false,
@@ -114,120 +109,204 @@ export default function TicketVerificationPage() {
     }
   };
 
-  const copyToClipboard = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setQrHash(text);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  // Start html5-qrcode scanner
+  const startScanner = async () => {
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode');
+      const html5QrCode = new Html5Qrcode('qr-reader');
+      scannerRef.current = html5QrCode;
+      setScannerActive(true);
+
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        (decodedText) => {
+          // Stop scanner after successful read to prevent duplicate triggers
+          stopScanner();
+          handleVerify(decodedText);
+        },
+        () => {
+          // Silent noise handler
+        }
+      );
+    } catch (err) {
+      console.error('Failed to start scanner:', err);
+      setScannerActive(false);
+    }
   };
 
+  const stopScanner = async () => {
+    if (scannerRef.current && scannerRef.current.isScanning) {
+      try {
+        await scannerRef.current.stop();
+        setScannerActive(false);
+      } catch (err) {
+        console.error('Failed to stop scanner:', err);
+      }
+    } else {
+      setScannerActive(false);
+    }
+  };
+
+  // Cleanup scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch((err: any) => console.error('Cleanup stop failed', err));
+      }
+    };
+  }, []);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-10 py-4">
+    <div className="max-w-4xl mx-auto space-y-10 py-8 select-none text-left pt-24">
       {/* Header Info */}
-      <div className="text-center md:text-left space-y-2">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center justify-center md:justify-start gap-2.5">
+      <div className="space-y-2 border-b border-white/5 pb-6">
+        <h1 className="text-3xl md:text-4xl font-serif font-black text-white tracking-wide flex items-center gap-3">
           <QrCode className="h-8 w-8 text-primary" />
-          <span>Ticket Scanner Dashboard</span>
+          <span>TICKET VALIDATOR</span>
         </h1>
-        <p className="text-sm md:text-base text-zinc-400 font-light">
-          Staff Console: cryptographically verify ticket validity and prevent double-entry at gate checks.
+        <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest">
+          Concert Gate Access Control • Cryptographic SHA-256 Signatures
         </p>
       </div>
 
       {/* Main Grid: Scanner Input and Results */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
         
         {/* Left Column: Scanner Inputs */}
         <div className="md:col-span-3 space-y-6">
-          <div className="bg-zinc-900/30 border border-white/5 p-6 rounded-2xl space-y-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <CompassIcon className="h-5 w-5 text-zinc-400" />
-              <span>Simulate Scan</span>
-            </h2>
-            
-            <div className="space-y-3">
-              <label htmlFor="ticket-hash" className="text-xs text-zinc-500 font-semibold block">TICKET SIGNATURE HASH (SHA-256)</label>
-              <div className="relative">
-                <input
-                  id="ticket-hash"
-                  type="text"
-                  placeholder="Paste 64-character hexadecimal hash..."
-                  value={qrHash}
-                  onChange={(e) => setQrHash(e.target.value)}
-                  className="w-full h-12 bg-zinc-950 border border-white/10 rounded-lg px-4 pr-10 text-sm font-mono text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-zinc-600 transition"
-                />
+          <div className="glass-card rounded-[2rem] p-6 space-y-6 shadow-2xl relative overflow-hidden border border-white/5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                Verification Gate
+              </h2>
+              {/* Tabs */}
+              <div className="flex rounded-full bg-zinc-950 p-1 border border-white/5">
                 <button
-                  onClick={() => handleVerify(qrHash)}
-                  disabled={verifying || !qrHash}
-                  className="absolute right-2 top-2 h-8 w-8 rounded bg-primary text-white flex items-center justify-center hover:bg-primary/90 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed transition"
+                  onClick={() => { setActiveTab('camera'); stopScanner(); }}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5",
+                    activeTab === 'camera' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
+                  )}
                 >
-                  <ArrowRight className="h-4 w-4" />
+                  <Camera className="h-3 w-3" />
+                  <span>Camera</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab('manual'); stopScanner(); }}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5",
+                    activeTab === 'manual' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
+                  )}
+                >
+                  <Keyboard className="h-3 w-3" />
+                  <span>Manual</span>
                 </button>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleVerify(qrHash)}
-                disabled={verifying || !qrHash}
-                className="flex-1 h-11 bg-primary hover:bg-primary/95 text-sm font-semibold text-white rounded-lg flex items-center justify-center gap-1.5 shadow-lg shadow-primary/10 transition active:scale-95 disabled:scale-100 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {verifying ? 'Verifying...' : 'Submit Verification'}
-              </button>
-              <button
-                onClick={() => { setQrHash(''); setResult(null); }}
-                className="px-4 h-11 border border-white/5 hover:bg-white/5 text-sm font-medium text-zinc-400 rounded-lg transition"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          {/* Test Hashes Helper Box */}
-          <div className="bg-zinc-950 border border-white/5 p-5 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Test Signatures (Seed DB)</h3>
-              <span className="text-[10px] text-zinc-600">Click to load & verify</span>
-            </div>
-            <div className="space-y-2">
-              {testHashes.map((item, idx) => (
+            {activeTab === 'camera' ? (
+              <div className="space-y-4">
                 <div 
-                  key={idx}
-                  onClick={() => copyToClipboard(item.hash, idx)}
-                  className="flex items-center justify-between p-2 rounded bg-zinc-900/40 border border-white/5 hover:border-zinc-700/50 hover:bg-zinc-900 cursor-pointer transition text-xs font-mono group"
+                  id="qr-reader" 
+                  className={cn(
+                    "w-full aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden border border-dashed flex flex-col items-center justify-center relative bg-zinc-950/60 transition-colors duration-300",
+                    scannerActive ? "border-primary/40" : "border-white/5"
+                  )}
                 >
-                  <div className="truncate pr-4 space-y-0.5">
-                    <span className="text-zinc-400 font-semibold block text-[10px]">{item.label}</span>
-                    <span className="text-zinc-500 block truncate max-w-[280px]">{item.hash}</span>
+                  {!scannerActive && (
+                    <div className="text-center space-y-4 p-6">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary animate-pulse">
+                        <Camera className="h-7 w-7" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-xs font-bold text-white uppercase font-mono">Camera Scanner Inactive</h3>
+                        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider max-w-[200px] mx-auto">
+                          Grant camera access to verify tickets in real-time
+                        </p>
+                      </div>
+                      <button
+                        onClick={startScanner}
+                        className="h-10 px-6 rounded-full bg-primary hover:bg-primary/95 text-white font-bold text-[10px] uppercase tracking-wider transition active:scale-95 shadow-md shadow-primary/20"
+                      >
+                        Activate Camera
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {scannerActive && (
+                  <button
+                    onClick={stopScanner}
+                    className="w-full h-11 border border-red-500/20 hover:bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider rounded-xl transition"
+                  >
+                    Deactivate Camera
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <label htmlFor="ticket-hash" className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest font-mono block">
+                    TICKET SIGNATURE HASH (SHA-256)
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="ticket-hash"
+                      type="text"
+                      placeholder="PASTE 64-CHARACTER SIGNATURE HASH..."
+                      value={qrHash}
+                      onChange={(e) => setQrHash(e.target.value)}
+                      className="w-full h-12 bg-zinc-950 border border-white/5 rounded-xl px-4 pr-12 text-xs font-mono text-white focus:outline-none focus:border-primary placeholder-zinc-700 transition"
+                    />
+                    <button
+                      onClick={() => handleVerify(qrHash)}
+                      disabled={verifying || !qrHash}
+                      className="absolute right-2 top-2 h-8 w-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary/90 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:cursor-not-allowed transition"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button className="h-6 w-6 rounded bg-zinc-800 text-zinc-400 flex items-center justify-center border border-white/5 shrink-0 group-hover:bg-primary group-hover:text-white transition">
-                    {copiedIndex === idx ? (
-                      <ClipboardCheck className="h-3.5 w-3.5" />
-                    ) : (
-                      <Search className="h-3.5 w-3.5" />
-                    )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleVerify(qrHash)}
+                    disabled={verifying || !qrHash}
+                    className="flex-1 h-11 bg-primary hover:bg-primary/95 text-[10px] font-bold uppercase tracking-wider text-white rounded-full flex items-center justify-center gap-1.5 shadow-lg shadow-primary/10 transition active:scale-95 disabled:scale-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {verifying ? 'Verifying...' : 'Submit Hash'}
+                  </button>
+                  <button
+                    onClick={() => { setQrHash(''); setResult(null); }}
+                    className="px-6 h-11 border border-white/5 hover:bg-white/5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 rounded-full transition"
+                  >
+                    Clear
                   </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right Column: Scan Result Alert View */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-zinc-900/30 border border-white/5 p-6 rounded-2xl h-full flex flex-col justify-between min-h-[300px]">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-zinc-400" />
+        <div className="md:col-span-2 space-y-6 h-full">
+          <div className="glass-card rounded-[2rem] p-6 border border-white/5 min-h-[340px] flex flex-col justify-between">
+            <h2 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+              <ShieldCheck className="h-4.5 w-4.5 text-primary" />
               <span>Result Panel</span>
             </h2>
 
             <div className="flex-1 flex flex-col items-center justify-center py-6">
               {!result ? (
                 <div className="text-center space-y-3">
-                  <div className="mx-auto h-12 w-12 rounded-full border border-dashed border-zinc-700 flex items-center justify-center text-zinc-600">
+                  <div className="mx-auto h-12 w-12 rounded-full border border-dashed border-zinc-800 flex items-center justify-center text-zinc-700 animate-pulse">
                     <QrCode className="h-6 w-6" />
                   </div>
-                  <p className="text-sm text-zinc-500 font-light">Awaiting ticket scan input...</p>
+                  <p className="text-[10px] text-zinc-550 uppercase tracking-wider font-mono">Awaiting verification scan...</p>
                 </div>
               ) : result.approved ? (
                 // Approved View
@@ -236,18 +315,18 @@ export default function TicketVerificationPage() {
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-xs font-bold text-emerald-500 tracking-widest uppercase">Access Granted</span>
-                    <h3 className="text-lg font-bold text-white truncate">{result.event?.artistName} - {result.event?.title}</h3>
-                    <p className="text-xs text-zinc-400 truncate">{result.event?.venueName}</p>
+                    <span className="text-[9px] font-bold text-emerald-500 tracking-widest uppercase font-mono">Access Granted</span>
+                    <h3 className="text-md font-serif font-bold text-white truncate">{result.event?.artistName} — {result.event?.title}</h3>
+                    <p className="text-[10px] text-zinc-550 uppercase font-mono tracking-wider truncate">{result.event?.venueName}</p>
                   </div>
-                  <div className="bg-zinc-950 p-4 rounded-xl border border-emerald-500/10 text-left text-xs space-y-2">
+                  <div className="bg-zinc-950/80 p-4 rounded-2xl border border-emerald-500/10 text-left text-[10px] space-y-2 font-mono uppercase">
                     <div className="flex justify-between border-b border-white/5 pb-1.5">
-                      <span className="text-zinc-500">Ticket Holder</span>
-                      <span className="font-semibold text-white truncate max-w-[150px]">{result.holder?.email}</span>
+                      <span className="text-zinc-650">Ticket Holder</span>
+                      <span className="font-bold text-white truncate max-w-[150px]">{result.holder?.email}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Scanned At</span>
-                      <span className="font-semibold text-zinc-400 tabular-nums">
+                      <span className="text-zinc-650">Scanned At</span>
+                      <span className="font-bold text-zinc-400 tabular-nums">
                         {result.scannedAt ? new Date(result.scannedAt).toLocaleTimeString() : 'N/A'}
                       </span>
                     </div>
@@ -258,28 +337,28 @@ export default function TicketVerificationPage() {
                 <div className="w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20 text-red-500">
                     {result.error === 'ALREADY_SCANNED' ? (
-                      <AlertTriangle className="h-8 w-8" />
+                      <AlertTriangle className="h-8 w-8 animate-pulse" />
                     ) : (
                       <XCircle className="h-8 w-8" />
                     )}
                   </div>
                   <div className="space-y-1">
-                    <span className="text-xs font-bold text-red-500 tracking-widest uppercase">Access Denied</span>
-                    <h3 className="text-base font-bold text-white">{result.message || 'Verification Failed'}</h3>
-                    <p className="text-xs text-zinc-500 font-mono">Code: {result.error}</p>
+                    <span className="text-[9px] font-bold text-red-500 tracking-widest uppercase font-mono">Access Denied</span>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">{result.message || 'Verification Failed'}</h3>
+                    <p className="text-[8px] text-zinc-600 font-mono">Code: {result.error}</p>
                   </div>
 
                   {result.error === 'ALREADY_SCANNED' && (
-                    <div className="bg-zinc-950 p-4 rounded-xl border border-red-500/10 text-left text-xs space-y-2">
+                    <div className="bg-zinc-950/80 p-4 rounded-2xl border border-red-500/10 text-left text-[10px] space-y-2 font-mono uppercase">
                       <div className="flex justify-between border-b border-white/5 pb-1.5">
-                        <span className="text-zinc-500">First Scanned</span>
-                        <span className="font-semibold text-red-400 tabular-nums">
+                        <span className="text-zinc-650">First Scanned</span>
+                        <span className="font-bold text-red-400 tabular-nums">
                           {result.scannedAt ? new Date(result.scannedAt).toLocaleTimeString() : 'N/A'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Ticket Holder</span>
-                        <span className="font-semibold text-zinc-400 truncate max-w-[150px]">{result.holderEmail}</span>
+                        <span className="text-zinc-650">Ticket Holder</span>
+                        <span className="font-bold text-zinc-400 truncate max-w-[150px]">{result.holderEmail}</span>
                       </div>
                     </div>
                   )}
@@ -287,26 +366,26 @@ export default function TicketVerificationPage() {
               )}
             </div>
             
-            <div className="text-[10px] text-zinc-600 text-center border-t border-white/5 pt-3">
-              Prisma atomic updates enforce single-scan verification.
+            <div className="text-[8px] text-zinc-700 text-center border-t border-white/5 pt-3 font-mono uppercase tracking-widest">
+              Enforced via Atomic Gate Database Locks
             </div>
           </div>
         </div>
       </div>
 
       {/* History Log Section */}
-      <div className="bg-zinc-900/10 border border-white/5 rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <History className="h-5 w-5 text-zinc-400" />
+      <div className="glass-card border border-white/5 rounded-[2rem] p-6 space-y-4">
+        <h2 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+          <History className="h-5 w-5 text-primary" />
           <span>Local Session Log</span>
         </h2>
         
         {scanHistory.length === 0 ? (
-          <p className="text-xs text-zinc-600 italic py-4 text-center">No scans recorded in this browser session.</p>
+          <p className="text-[10px] text-zinc-600 uppercase tracking-wider font-mono py-4 text-center">No scans recorded in this browser session.</p>
         ) : (
-          <div className="divide-y divide-white/5 overflow-hidden rounded-lg border border-white/5 bg-zinc-950 max-h-[250px] overflow-y-auto">
+          <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/5 bg-zinc-950 max-h-[250px] overflow-y-auto">
             {scanHistory.map((log, index) => (
-              <div key={index} className="p-3 flex items-center justify-between text-xs hover:bg-zinc-900/40 transition">
+              <div key={index} className="p-3.5 flex items-center justify-between text-[11px] hover:bg-zinc-900/40 transition">
                 <div className="flex items-center gap-3 min-w-0 pr-4">
                   <div className={cn(
                     "h-2 w-2 rounded-full shrink-0",
@@ -315,13 +394,13 @@ export default function TicketVerificationPage() {
                     log.status === 'ERROR' && 'bg-amber-500'
                   )} />
                   <div className="min-w-0">
-                    <p className="font-medium text-white truncate max-w-[300px] md:max-w-xl">{log.message}</p>
-                    <p className="text-[10px] text-zinc-500 font-mono truncate max-w-[200px] mt-0.5">Hash: {log.hash}</p>
+                    <p className="font-bold text-white uppercase truncate max-w-[300px] md:max-w-xl">{log.message}</p>
+                    <p className="text-[9px] text-zinc-600 font-mono truncate max-w-[200px] mt-0.5">Hash: {log.hash}</p>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[10px] text-zinc-400 font-semibold tabular-nums">{log.timestamp.toLocaleTimeString()}</p>
-                  {log.holder && <p className="text-[9px] text-zinc-500 truncate max-w-[100px] mt-0.5">{log.holder}</p>}
+                <div className="text-right shrink-0 font-mono">
+                  <p className="text-[9px] text-zinc-400 font-semibold tabular-nums">{log.timestamp.toLocaleTimeString()}</p>
+                  {log.holder && <p className="text-[8px] text-zinc-650 truncate max-w-[100px] mt-0.5">{log.holder}</p>}
                 </div>
               </div>
             ))}
@@ -329,26 +408,5 @@ export default function TicketVerificationPage() {
         )}
       </div>
     </div>
-  );
-}
-
-// Simple internal icon to avoid imports
-function CompassIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <circle cx="12" cy="12" r="10" />
-      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-    </svg>
   );
 }

@@ -6,7 +6,6 @@ import { Sparkles, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
 interface CommentEntry {
   id: string;
   comment: string;
-  email: string;
   createdAt: string;
   amountCents: number;
 }
@@ -34,15 +33,15 @@ export default function LiveScreenPage() {
   // Track seen IDs to trigger the live ripple alert on new submissions
   const seenIds = useRef<Set<string>>(new Set());
 
-  // Poll comments endpoint every 3 seconds
+  // Connect to live SSE event stream
   useEffect(() => {
     let timerId: NodeJS.Timeout | null = null;
-    const fetchComments = async () => {
+    const eventSource = new EventSource('/api/live/stream');
+
+    eventSource.onmessage = (event) => {
       try {
-        const res = await fetch('/api/live/comments');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data?.success && Array.isArray(data.comments)) {
+        const data = JSON.parse(event.data);
+        if (data && Array.isArray(data.comments)) {
           const fetched: CommentEntry[] = data.comments;
           
           if (fetched.length > 0) {
@@ -65,14 +64,16 @@ export default function LiveScreenPage() {
           }
         }
       } catch (err) {
-        console.error('Failed to poll live display comments:', err);
+        console.error('Failed to process live screen SSE comment update:', err);
       }
     };
 
-    fetchComments();
-    const interval = setInterval(fetchComments, 3000);
+    eventSource.onerror = (err) => {
+      console.error('SSE EventSource connection error on live screen:', err);
+    };
+
     return () => {
-      clearInterval(interval);
+      eventSource.close();
       if (timerId) clearTimeout(timerId);
     };
   }, []);

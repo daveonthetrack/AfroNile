@@ -1,3 +1,3 @@
 {
-  "buildCommand": "pnpm --filter=@repo/database db:generate && pnpm --filter=@repo/auth build && next build"
+  "buildCommand": "pnpm --filter=@repo/database db:generate && pnpm --filter=@repo/database db:deploy && pnpm --filter=@repo/auth build && next build"
 }

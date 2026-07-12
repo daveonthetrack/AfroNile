@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import { verifyPassword, signToken } from '@repo/auth';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-artist-monolith';
+import { getJwtSecret } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,7 +44,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role.name,
       },
-      JWT_SECRET
+      getJwtSecret()
     );
 
     // 4. Set http-only cookie in response

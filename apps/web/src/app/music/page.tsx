@@ -1,8 +1,14 @@
 import React from 'react';
 import { prisma } from '@repo/database';
 import { MusicClient } from './music-client';
+import type { Metadata } from 'next';
 
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: 'Discography & Audio Player | AfroNile',
+  description: 'Explore and stream the complete Nile Waves discography. Unlock high-fidelity streams by purchasing albums directly from the artist.',
+};
 
 export default async function MusicPage() {
   // 1. Fetch artist details

@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
-import { verifyToken } from '@repo/auth';
+import { verifyAdminFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-artist-monolith';
-
 export async function GET(req: NextRequest) {
   try {
-    // 1. Authenticate user via token cookie
-    const token = req.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized. Missing token.' }, { status: 401 });
-    }
-
-    const payload = verifyToken(token, JWT_SECRET) as any;
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!verifyAdminFromRequest(req)) {
       return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
     }
 
@@ -38,20 +29,18 @@ export async function GET(req: NextRequest) {
     // b. Support Contributions (Donations) Metrics (only count verified paid ones)
     const totalDonationsCount = await prisma.supportContribution.count({
       where: {
-        stripeSessionId: {
-          not: {
-            startsWith: 'pending_'
-          }
-        }
+        AND: [
+          { stripeSessionId: { not: { startsWith: 'pending_' } } },
+          { stripeSessionId: { not: { startsWith: 'mock_stripe_session_' } } }
+        ]
       }
     });
     const donationSumResult = await prisma.supportContribution.aggregate({
       where: {
-        stripeSessionId: {
-          not: {
-            startsWith: 'pending_'
-          }
-        }
+        AND: [
+          { stripeSessionId: { not: { startsWith: 'pending_' } } },
+          { stripeSessionId: { not: { startsWith: 'mock_stripe_session_' } } }
+        ]
       },
       _sum: {
         amountCents: true
@@ -90,11 +79,10 @@ export async function GET(req: NextRequest) {
     const recentDonations = await prisma.supportContribution.findMany({
       take: 50,
       where: {
-        stripeSessionId: {
-          not: {
-            startsWith: 'pending_'
-          }
-        }
+        AND: [
+          { stripeSessionId: { not: { startsWith: 'pending_' } } },
+          { stripeSessionId: { not: { startsWith: 'mock_stripe_session_' } } }
+        ]
       },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -176,11 +164,10 @@ export async function GET(req: NextRequest) {
         createdAt: {
           gte: thirtyDaysAgo
         },
-        stripeSessionId: {
-          not: {
-            startsWith: 'pending_'
-          }
-        }
+        AND: [
+          { stripeSessionId: { not: { startsWith: 'pending_' } } },
+          { stripeSessionId: { not: { startsWith: 'mock_stripe_session_' } } }
+        ]
       },
       select: {
         createdAt: true,

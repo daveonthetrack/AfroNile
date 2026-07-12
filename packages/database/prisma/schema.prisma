@@ -93,6 +93,7 @@ model Product {
   priceCents    Int         @map("price_cents")
   sku           String      @unique
   stockQuantity Int         @map("stock_quantity")
+  imageUrl      String?     @map("image_url")
   orderItems    OrderItem[]
 
   @@map("products")
@@ -109,6 +110,7 @@ model Event {
   tickets       Ticket[]
   contributions SupportContribution[]
   checkins      ConcertCheckIn[]
+  eventState    EventState?
 
   @@index([artistId])
   @@map("events")
@@ -200,4 +202,15 @@ model ConcertCheckIn {
   @@index([userId])
   @@index([eventId])
   @@map("concert_checkins")
+}
+
+model EventState {
+  id               String   @id @default(uuid()) @db.Uuid
+  eventId          String   @unique @map("event_id") @db.Uuid
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  currentSongId    String?  @map("current_song_id")
+  currentSongIndex Int      @default(0) @map("current_song_index")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("event_states")
 }

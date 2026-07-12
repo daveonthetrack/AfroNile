@@ -35,22 +35,25 @@ export function TourClient({ events, ticketProducts }: TourClientProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-16 pt-16 select-none text-left">
+      
       {/* Banner */}
       <div className="border-b border-white/5 pb-6">
-        <h1 className="text-4xl font-bold text-white tracking-tight flex items-center gap-3">
+        <h1 className="text-4xl font-serif font-black text-white tracking-wide flex items-center gap-3">
           <Calendar className="h-7 w-7 text-primary" />
-          <span>Tour & Live Events</span>
+          <span>LIVE EVENTS</span>
         </h1>
-        <p className="text-sm text-zinc-400 mt-2 font-light">Join the Nile Waves experience live. Cryptographic ticket verification enforced at gate check-in.</p>
+        <p className="text-xs text-zinc-400 mt-2 font-mono uppercase tracking-widest">
+          Nile Waves Experience • Peer-to-Peer Gate verification
+        </p>
       </div>
 
       {/* Shows List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {events.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-white/5 rounded-2xl bg-zinc-900/10">
-            <Calendar className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
-            <p className="text-sm text-zinc-500">No upcoming events scheduled.</p>
+          <div className="text-center py-20 border border-dashed border-white/5 rounded-[2.5rem] bg-zinc-950/40">
+            <Calendar className="h-8 w-8 text-zinc-700 mx-auto mb-2 animate-pulse" />
+            <p className="text-xs text-zinc-550 font-mono uppercase tracking-wider">No upcoming events scheduled</p>
           </div>
         ) : (
           events.map((event) => {

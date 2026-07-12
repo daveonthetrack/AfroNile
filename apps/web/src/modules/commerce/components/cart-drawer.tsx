@@ -52,7 +52,6 @@ export function CartDrawer({ userId }: CartDrawerProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId,
           items: items.map(item => ({
             productId: item.id,
             quantity: item.quantity

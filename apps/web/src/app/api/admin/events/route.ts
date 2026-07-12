@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
-import { cookies } from 'next/headers';
-
-async function verifyAdmin(): Promise<boolean> {
-  const token = cookies().get('token')?.value;
-  if (!token) return false;
-  try {
-    const parts = token.split('.');
-    if (parts.length === 3) {
-      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const decoded = JSON.parse(atob(payloadBase64));
-      return decoded.role === 'ADMIN';
-    }
-  } catch (e) {}
-  return false;
-}
+import { verifyAdminFromCookies } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await verifyAdmin())) {
+    if (!(await verifyAdminFromCookies())) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
@@ -34,14 +20,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'NO_ARTIST_FOUND' }, { status: 400 });
     }
 
-    const event = await prisma.event.create({
-      data: {
-        title: title.trim(),
-        venueName: venueName.trim(),
-        venueAddress: venueAddress.trim(),
-        eventDate: new Date(eventDate),
-        artistId: firstArtist.id,
-      },
+    const parsedDate = new Date(eventDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return NextResponse.json({ error: 'INVALID_EVENT_DATE' }, { status: 400 });
+    }
+
+    const event = await prisma.$transaction(async (tx) => {
+      const created = await tx.event.create({
+        data: {
+          title: title.trim(),
+          venueName: venueName.trim(),
+          venueAddress: venueAddress.trim(),
+          eventDate: parsedDate,
+          artistId: firstArtist.id,
+        },
+      });
+
+      await tx.product.create({
+        data: {
+          type: 'TICKET_DIGITAL',
+          title: `General Admission - ${title.trim()}`,
+          priceCents: 4500,
+          sku: `TICKET_${created.id}`,
+          stockQuantity: 500,
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json({ success: true, event }, { status: 201 });
@@ -53,7 +58,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    if (!(await verifyAdmin())) {
+    if (!(await verifyAdminFromCookies())) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
@@ -82,7 +87,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    if (!(await verifyAdmin())) {
+    if (!(await verifyAdminFromCookies())) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 

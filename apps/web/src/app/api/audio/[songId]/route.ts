@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAndDistributeAsset } from '../../../../modules/audio/assetDistribution';
+import { verifyToken } from '@repo/auth';
+import { getJwtSecret } from '@/lib/env';
 
 /**
  * GET /api/audio/[songId]
@@ -13,22 +15,29 @@ export async function GET(
   try {
     const { songId } = params;
     
-    // Retrieve userId from query params to simulate session access checks
-    // In production, this would read from Next-Auth or Iron Session cookies.
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
+    // Resolve user ID from secure auth cookie signature
+    const token = req.cookies.get('token')?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: 'You must be signed in to stream music.' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyToken(token, getJwtSecret());
+    if (!decoded) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: 'Your session is invalid or expired. Please sign in again.' },
+        { status: 401 }
+      );
+    }
+
+    const userId = decoded.userId;
 
     if (!songId) {
       return NextResponse.json(
         { error: 'SONG_ID_REQUIRED', message: 'Song ID parameter is required.' },
         { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'UNAUTHORIZED', message: 'User session or ID is required.' },
-        { status: 401 }
       );
     }
 
@@ -67,3 +76,4 @@ export async function GET(
     );
   }
 }
+

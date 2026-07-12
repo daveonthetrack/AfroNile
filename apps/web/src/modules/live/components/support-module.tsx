@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, CreditCard } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { SUPPORT_TIERS } from '../constants';
 
@@ -33,7 +32,6 @@ export function SupportModule({
   comment,
   setComment,
 }: SupportModuleProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -130,9 +128,7 @@ export function SupportModule({
       if (data.clientSecret) {
         setStripeClientSecret(data.clientSecret);
       } else {
-        // Demo Mode Fallback: Simulated network check-in latency
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        router.push(`/live/memory/${data.contributionId}`);
+        throw new Error('Payment session could not be initialized.');
       }
     } catch (err: any) {
       console.error('Support backing failed:', err);
@@ -162,31 +158,31 @@ export function SupportModule({
       )}
 
       {/* 1. Share Your Story Card */}
-      <div className="bg-[#f4efe6] text-[#2c2a27] rounded-[28px] p-5 space-y-3 shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden border border-transparent hover:border-zinc-300">
+      <div className="glass-card rounded-[2rem] p-5 space-y-3 shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden border border-white/5 hover:border-primary/20">
         <div className="flex justify-between items-center">
-          <h4 className="text-sm font-bold tracking-tight">Share Your Story</h4>
-          <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest font-bold bg-zinc-200/60 px-2 py-0.5 rounded-full">Family Share</span>
+          <h4 className="text-xs font-bold tracking-wider text-zinc-400 uppercase font-mono">Share Your Story</h4>
+          <span className="text-[8px] font-mono text-primary uppercase tracking-widest font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">Stage Feed</span>
         </div>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="SHARE YOUR CONCERT EXPERIENCE OR VIBE..."
           rows={3}
-          className="w-full bg-transparent border-0 text-xs font-mono font-medium placeholder-zinc-500/75 text-zinc-900 focus:outline-none resize-none uppercase"
+          className="w-full bg-transparent border-0 text-xs font-mono font-medium placeholder-zinc-650 text-white focus:outline-none resize-none uppercase"
           disabled={!!stripeClientSecret}
         />
       </div>
 
       {/* 2. Join the Family Card */}
-      <div className="bg-[#f4efe6] text-[#2c2a27] rounded-[28px] p-5 space-y-3.5 shadow-lg hover:shadow-xl transition-all duration-300 border border-transparent hover:border-zinc-300">
-        <h4 className="text-sm font-bold tracking-tight">Join the AfroNile Family</h4>
+      <div className="glass-card rounded-[2rem] p-5 space-y-3.5 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/5 hover:border-primary/20">
+        <h4 className="text-xs font-bold tracking-wider text-zinc-400 uppercase font-mono">Join the Family</h4>
         <div className="space-y-2.5">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="YOUR EMAIL"
-            className="w-full h-10 px-4 rounded-full bg-black/[0.04] border border-black/10 focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-mono text-zinc-900 focus:outline-none uppercase placeholder-zinc-500/65 focus:bg-white transition-all duration-200"
+            className="w-full h-10 px-4 rounded-full bg-zinc-950/60 border border-white/5 focus:border-primary focus:ring-2 focus:ring-primary/25 text-xs font-mono text-white focus:outline-none uppercase placeholder-zinc-550 transition-all duration-200"
             disabled={!!stripeClientSecret}
           />
           <input
@@ -194,7 +190,7 @@ export function SupportModule({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="YOUR PHONE NUMBER"
-            className="w-full h-10 px-4 rounded-full bg-black/[0.04] border border-black/10 focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-mono text-zinc-900 focus:outline-none uppercase placeholder-zinc-500/65 focus:bg-white transition-all duration-200"
+            className="w-full h-10 px-4 rounded-full bg-zinc-950/60 border border-white/5 focus:border-primary focus:ring-2 focus:ring-primary/25 text-xs font-mono text-white focus:outline-none uppercase placeholder-zinc-550 transition-all duration-200"
             disabled={!!stripeClientSecret}
           />
         </div>
@@ -225,7 +221,7 @@ export function SupportModule({
                 }}
                 className={`h-15 rounded-2xl flex flex-col justify-center items-center border transition-all duration-300 relative ${
                   isSelected
-                    ? 'bg-white border-white text-black scale-105 shadow-[0_8px_20px_-4px_rgba(245,158,11,0.3)] ring-2 ring-primary z-10'
+                    ? 'bg-white border-white text-black scale-105 shadow-[0_8px_20px_-4px_rgba(212,175,55,0.3)] ring-2 ring-primary z-10'
                     : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:border-white/25 hover:scale-102 hover:text-white disabled:opacity-50'
                 }`}
               >
@@ -265,12 +261,12 @@ export function SupportModule({
         <button
           onClick={handleSupportSubmit}
           disabled={loading || !!stripeClientSecret}
-          className="w-full h-12 bg-primary hover:bg-primary/95 text-white rounded-full font-bold text-sm transition-all active:scale-98 flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+          className="w-full h-12 bg-primary hover:bg-primary/95 text-white rounded-full font-bold text-xs uppercase tracking-wider transition-all active:scale-98 flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
         >
           {loading ? (
             <div className="flex items-center gap-2">
               <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span className="text-xs uppercase font-mono tracking-widest text-zinc-300">Generating Portal...</span>
+              <span className="text-[10px] uppercase font-mono tracking-widest text-zinc-300">Generating Portal...</span>
             </div>
           ) : (
             <>
@@ -291,3 +287,4 @@ export function SupportModule({
     </div>
   );
 }
+

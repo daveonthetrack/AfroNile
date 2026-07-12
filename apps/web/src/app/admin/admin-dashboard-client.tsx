@@ -116,8 +116,10 @@ export default function AdminDashboardClient() {
     sku: '',
     priceCents: 0,
     stockQuantity: 0,
-    type: 'MERCHANDISE'
+    type: 'MERCHANDISE',
+    imageUrl: '',
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Event Modals
   const [showEventModal, setShowEventModal] = useState(false);
@@ -456,7 +458,8 @@ export default function AdminDashboardClient() {
         sku: product.sku,
         priceCents: product.priceCents,
         stockQuantity: product.stockQuantity,
-        type: product.type
+        type: product.type,
+        imageUrl: product.imageUrl || '',
       });
     } else {
       setEditingProduct(null);
@@ -465,10 +468,32 @@ export default function AdminDashboardClient() {
         sku: `sku_${Date.now()}`,
         priceCents: 1500,
         stockQuantity: 100,
-        type: 'MERCHANDISE'
+        type: 'MERCHANDISE',
+        imageUrl: '',
       });
     }
     setShowProductModal(true);
+  };
+
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      setProductForm((prev) => ({ ...prev, imageUrl: data.url }));
+      triggerQuickAction('Product image uploaded.');
+    } catch (err: any) {
+      alert(err.message || 'Image upload failed.');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
   };
 
   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -1129,7 +1154,7 @@ export default function AdminDashboardClient() {
                 </div>
               </div>
 
-              {/* Developer Operations Simulator Tools panel */}
+              {/* Developer Operations Tools panel */}
               <div className="bg-zinc-950 p-6 rounded-2xl border border-white/5 space-y-4">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-3">
                   <Wrench className="h-5 w-5 text-zinc-400" />
@@ -1139,6 +1164,8 @@ export default function AdminDashboardClient() {
                   Use these testing buttons to generate mock purchases, support entries, or reset database scanning logs. This assists in auditing layout responsiveness and trend calculations instantly.
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
+                  {process.env.NODE_ENV !== 'production' && (
+                    <>
                   <button
                     onClick={handleSimulateOrder}
                     disabled={refreshing}
@@ -1160,6 +1187,8 @@ export default function AdminDashboardClient() {
                   >
                     Reset Ticket Scans
                   </button>
+                    </>
+                  )}
                   <button
                     onClick={handleStripeSync}
                     disabled={refreshing}
@@ -1807,6 +1836,36 @@ export default function AdminDashboardClient() {
                     placeholder="e.g. 100"
                     className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Image URL</label>
+                <input
+                  type="url"
+                  value={productForm.imageUrl}
+                  onChange={(e) => setProductForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
+                  placeholder="https://... or /uploads/..."
+                  className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                />
+                <div className="flex items-center gap-3 pt-1">
+                  <label className="h-9 px-4 inline-flex items-center rounded-xl bg-zinc-900 border border-white/5 text-[10px] font-bold uppercase tracking-wider text-zinc-300 hover:text-white hover:border-white/10 transition cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      disabled={uploadingImage}
+                      onChange={handleProductImageUpload}
+                    />
+                    {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                  </label>
+                  {productForm.imageUrl && (
+                    <img
+                      src={productForm.imageUrl}
+                      alt="Product preview"
+                      className="h-9 w-9 rounded-lg object-cover border border-white/10"
+                    />
+                  )}
                 </div>
               </div>
 

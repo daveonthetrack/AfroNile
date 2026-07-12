@@ -1,16 +1,24 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit } from 'next/font/google';
+import { Outfit, Cinzel } from 'next/font/google';
 import './globals.css';
-import { prisma } from '@repo/database';
 import { NavigationBar } from '../components/shared/navigation-bar';
 import { GlobalAudioPlayer } from '../components/shared/global-audio-player';
 import { CartDrawer } from '../modules/commerce/components/cart-drawer';
 import { MainContainer } from '../components/shared/main-container';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@repo/auth';
+import { getJwtSecret } from '@/lib/env';
 
 const fontSans = Outfit({
   subsets: ['latin'],
   variable: '--font-sans',
   weight: ['300', '400', '500', '600', '700', '800'],
+});
+
+const fontSerif = Cinzel({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  weight: ['400', '500', '600', '700', '800', '900'],
 });
 
 export const metadata: Metadata = {
@@ -24,32 +32,25 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-import { cookies } from 'next/headers';
-
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const defaultUser = await prisma.user.findFirst({
-    where: { email: 'user@afronile.com' },
-  });
-
   const token = cookies().get('token')?.value;
   let currentUser = null;
+  let currentUserId = '';
 
   if (token) {
     try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        const decoded = JSON.parse(atob(payloadBase64));
-        
+      const decoded = verifyToken(token, getJwtSecret());
+      if (decoded) {
         currentUser = {
           name: decoded.email.split('@')[0],
           email: decoded.email,
           isAdmin: decoded.role === 'ADMIN',
         };
+        currentUserId = decoded.userId;
       }
     } catch (e) {
       console.error('Failed to parse layout session token:', e);
@@ -57,21 +58,14 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${fontSans.variable} dark scroll-smooth`}>
+    <html lang="en" className={`${fontSans.variable} ${fontSerif.variable} dark scroll-smooth`}>
       <body className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased overflow-x-hidden">
-        {/* Navigation Shell */}
         <NavigationBar user={currentUser} />
-        
-        {/* Main Content Area */}
         <MainContainer>
           {children}
         </MainContainer>
-        
-        {/* Persistent Floating Bottom Audio Player */}
         <GlobalAudioPlayer />
-
-        {/* Global Slide-out Shopping Cart Sidebar */}
-        <CartDrawer userId={defaultUser?.id || ''} />
+        <CartDrawer userId={currentUserId} />
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import Stripe from 'stripe';
-import crypto from 'crypto';
+import { getStripeSecretKey } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,78 +14,58 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/shop?error=missing_order_id', req.url));
   }
 
+  if (!sessionId) {
+    return NextResponse.redirect(new URL('/shop?error=missing_session_id', req.url));
+  }
+
   try {
-    // 1. Resolve order details
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: {
-        orderItems: {
-          include: {
-            product: true,
-          },
-        },
-      },
     });
 
     if (!order) {
       return NextResponse.redirect(new URL(`/shop?error=order_not_found&order_id=${orderId}`, req.url));
     }
 
-    // 2. If already PAID, just redirect to tickets
     if (order.status === 'PAID') {
       return NextResponse.redirect(new URL(`/tickets?success=true&order_id=${orderId}`, req.url));
     }
 
-    // 3. Verify Stripe payment status
-    const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
-    if (sessionId && secretKey) {
-      const stripe = new Stripe(secretKey, {
-        apiVersion: '2024-04-10' as any,
-      });
-
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-      if (session.payment_status !== 'paid') {
-        return NextResponse.redirect(new URL(`/shop?error=payment_failed&order_id=${orderId}`, req.url));
-      }
-    }
-
-    // 4. Update order status to PAID and generate tickets for TICKET_DIGITAL products
-    await prisma.$transaction(async (tx) => {
-      // Mark order as paid
-      await tx.order.update({
-        where: { id: orderId },
-        data: { status: 'PAID' },
-      });
-
-      // Generate tickets
-      for (const item of order.orderItems) {
-        if (item.product.type === 'TICKET_DIGITAL') {
-          // SKU format is TICKET_[EVENT_ID]
-          const eventId = item.product.sku.replace('TICKET_', '');
-          
-          const event = await tx.event.findUnique({ where: { id: eventId } });
-          if (!event) continue;
-
-          for (let i = 0; i < item.quantity; i++) {
-            const randomBytes = crypto.randomBytes(32).toString('hex');
-            const qrCodeHash = crypto.createHash('sha256').update(randomBytes).digest('hex');
-
-            await tx.ticket.create({
-              data: {
-                orderItemId: item.id,
-                eventId: event.id,
-                qrCodeHash: qrCodeHash,
-              },
-            });
-          }
-        }
-      }
+    const stripe = new Stripe(getStripeSecretKey(), {
+      apiVersion: '2024-04-10' as Stripe.LatestApiVersion,
     });
 
-    return NextResponse.redirect(new URL(`/tickets?success=true&order_id=${orderId}`, req.url));
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  } catch (error: any) {
+    if (session.payment_status !== 'paid') {
+      return NextResponse.redirect(new URL(`/shop?error=payment_failed&order_id=${orderId}`, req.url));
+    }
+
+    if (session.metadata?.orderId !== orderId) {
+      return NextResponse.redirect(new URL('/shop?error=session_mismatch', req.url));
+    }
+
+    // Poll briefly for webhook fulfillment (read-only — never writes to DB)
+    let currentStatus: string = order.status;
+    for (let attempt = 0; attempt < 10 && currentStatus === 'PENDING'; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const refreshed = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { status: true },
+      });
+      currentStatus = refreshed?.status ?? 'PENDING';
+    }
+
+    if (currentStatus === 'PAID') {
+      return NextResponse.redirect(new URL(`/tickets?success=true&order_id=${orderId}`, req.url));
+    }
+
+    return NextResponse.redirect(new URL(`/tickets?processing=true&order_id=${orderId}`, req.url));
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Checkout success verification error:', error);
-    return NextResponse.redirect(new URL(`/shop?error=verification_failed&message=${encodeURIComponent(error.message || '')}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/shop?error=verification_failed&message=${encodeURIComponent(message)}`, req.url)
+    );
   }
 }
