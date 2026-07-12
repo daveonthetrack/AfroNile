@@ -34,6 +34,10 @@ export function NavigationBar({ user }: NavigationBarProps) {
   const { setIsOpen, getItemCount } = useCartStore();
   const itemCount = getItemCount();
 
+  if (pathname === '/live/screen') {
+    return null;
+  }
+
   const handleLogout = async () => {
     try {
       const response = await fetch('/api/auth/logout', { method: 'POST' });

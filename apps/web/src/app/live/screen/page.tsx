@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Download, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
 
 interface CommentEntry {
   id: string;
@@ -12,7 +12,7 @@ interface CommentEntry {
 }
 
 const DEFAULT_WELCOME_STORIES = [
-  "Welcome to the AfroNile Live Companion experience. Scan the stage QR code to connect.",
+  "Welcome to the AfroNile Experience. Scan the QR code and share your story.",
   "Deep Nile frequencies active tonight. Share your story, vibe, or concert reflection.",
   "Egyptian rhythms, modern echoes. You are part of the sound tonight.",
   "Keep the soundwaves flowing. Support the performance and elevate the momentum.",
@@ -216,35 +216,20 @@ export default function LiveScreenPage() {
           </div>
         ) : (
           /* Empty screen status */
-          <div className="space-y-4 text-zinc-600 animate-pulse">
-            <p className="text-xl uppercase tracking-widest font-light">Waiting for fans to connect...</p>
-            <p className="text-xs">Scan the QR code at the stage entrance to share your vibe.</p>
+          <div className="space-y-6 text-zinc-400 animate-pulse">
+            <p className="text-2xl uppercase tracking-[0.2em] font-light">Welcome to the AfroNile Experience</p>
+            <p className="text-sm">Scan the QR code and share your story</p>
           </div>
         )}
 
       </main>
 
-      {/* Footer & CSV Export Shortcut link */}
-      <footer className="relative z-10 flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 gap-4 text-zinc-600 text-[10px] tracking-widest">
-        <div>
-          <span>POWERED BY NILE WAVES REALTIME SYNC</span>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Real-time sound wave decoration */}
-          <svg className="w-24 h-4 stroke-[1]" viewBox="0 0 100 20" fill="none">
-            <path d="M 0,10 Q 12,2 25,10 T 50,10 T 75,10 T 100,10" stroke="#f59e0b" strokeLinecap="round" className="animate-pulse" />
-          </svg>
-          
-          {/* Promotional Fan contact export CSV download action */}
-          <a 
-            href="/api/live/export-fans" 
-            className="flex items-center gap-1 bg-zinc-950 hover:bg-zinc-900 border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg transition-all"
-          >
-            <Download className="h-3 w-3" />
-            <span>EXPORT MARKETING CSV</span>
-          </a>
-        </div>
+      {/* Immersive centered footer instructions */}
+      <footer className="relative z-10 text-center pb-2 text-[10px] tracking-[0.25em] text-zinc-600 uppercase">
+        Welcome to the AfroNile Experience • Scan the QR code & share your story
       </footer>
+
+
 
     </div>
   );

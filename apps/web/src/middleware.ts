@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Protect the staff ticket scanning gate
-  if (pathname.startsWith('/verify')) {
+  // Protect the admin and staff routes
+  if (pathname.startsWith('/verify') || pathname.startsWith('/admin')) {
     const token = req.cookies.get('token')?.value;
 
     if (!token) {
@@ -23,11 +23,19 @@ export function middleware(req: NextRequest) {
       const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
       const claims = JSON.parse(atob(payloadBase64));
 
-      // Assert that the holder belongs to STAFF or ADMIN role
-      if (claims.role !== 'ADMIN' && claims.role !== 'STAFF') {
-        const url = new URL('/', req.url);
-        url.searchParams.set('error', 'UNAUTHORIZED_ACCESS');
-        return NextResponse.redirect(url);
+      // Assert role permissions
+      if (pathname.startsWith('/admin')) {
+        if (claims.role !== 'ADMIN') {
+          const url = new URL('/', req.url);
+          url.searchParams.set('error', 'UNAUTHORIZED_ACCESS');
+          return NextResponse.redirect(url);
+        }
+      } else if (pathname.startsWith('/verify')) {
+        if (claims.role !== 'ADMIN' && claims.role !== 'STAFF') {
+          const url = new URL('/', req.url);
+          url.searchParams.set('error', 'UNAUTHORIZED_ACCESS');
+          return NextResponse.redirect(url);
+        }
       }
       
     } catch (e) {
@@ -43,6 +51,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/verify/:path*'
+    '/verify/:path*',
+    '/admin/:path*'
   ],
 };

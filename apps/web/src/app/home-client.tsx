@@ -92,6 +92,15 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
 
   const renderProductGraphic = (title: string) => {
     const name = title.toLowerCase();
+    if (name.includes('vinyl') || name.includes('record')) {
+      return (
+        <img 
+          src="/nile_waves_album_art.jpg" 
+          alt={title} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+        />
+      );
+    }
     if (name.includes('shirt') || name.includes('tee') || name.includes('hoodie') || name.includes('apparel')) {
       return (
         <img 

@@ -41,7 +41,11 @@ export default function LoginPage() {
       }
 
       // Successful login -> Redirect. Refresh layout router to reload session cookie
-      router.push(redirect);
+      if (data.user?.role === 'ADMIN' && redirect === '/') {
+        router.push('/admin');
+      } else {
+        router.push(redirect);
+      }
       router.refresh();
 
     } catch (err: any) {

@@ -38,13 +38,30 @@ export default async function ConcertMemoryPage({ params, searchParams }: Memory
         apiVersion: '2024-04-10' as any,
       });
       const session = await stripe.checkout.sessions.retrieve(sessionId);
-      if (session.payment_status !== 'paid') {
+      if (session.payment_status === 'paid') {
+        // Update database with verified real Stripe session ID and amount total
+        await prisma.supportContribution.update({
+          where: { id: params.id },
+          data: {
+            stripeSessionId: sessionId,
+            amountCents: session.amount_total || contribution.amountCents
+          }
+        });
+      } else {
         paymentFailed = true;
       }
     } catch (err) {
       console.error('Failed to verify Stripe support payment status:', err);
       paymentFailed = true;
     }
+  } else if (!sessionId && contribution.stripeSessionId?.startsWith('pending_')) {
+    // Demo Mode Fallback: Update pending flag to mark as paid demo contribution
+    await prisma.supportContribution.update({
+      where: { id: params.id },
+      data: {
+        stripeSessionId: `demo_paid_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+      }
+    });
   }
 
   // Render payment declined/failed screen if transaction failed

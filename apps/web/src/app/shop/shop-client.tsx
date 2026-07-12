@@ -37,6 +37,17 @@ export function ShopClient({ products }: ShopClientProps) {
   const renderProductGraphic = (title: string) => {
     const name = title.toLowerCase();
     
+    // Vinyl/Record styling
+    if (name.includes('vinyl') || name.includes('record')) {
+      return (
+        <img 
+          src="/nile_waves_album_art.jpg" 
+          alt={title} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+        />
+      );
+    }
+    
     // Hoodie/T-Shirt styling
     if (name.includes('shirt') || name.includes('tee') || name.includes('hoodie') || name.includes('apparel')) {
       return (

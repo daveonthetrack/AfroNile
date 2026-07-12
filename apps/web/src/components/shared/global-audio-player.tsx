@@ -13,6 +13,7 @@ import {
   ListMusic
 } from 'lucide-react';
 import { useAudioStore } from '../../modules/audio/hooks/useAudioStore';
+import { usePathname } from 'next/navigation';
 
 export function GlobalAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -70,7 +71,9 @@ export function GlobalAudioPlayer() {
     audioRef.current.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
 
-  if (!mounted) return null;
+  const pathname = usePathname();
+
+  if (!mounted || pathname === '/live/screen') return null;
 
   const handleTimelineChange = (val: number[]) => {
     if (!audioRef.current || val[0] === undefined) return;
