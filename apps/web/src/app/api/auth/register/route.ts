@@ -2,17 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import { hashPassword, signToken } from '@repo/auth';
 import { getJwtSecret } from '@/lib/env';
+import { RegisterSchema } from '@/lib/validation';
+import { AuditService } from '@/lib/services/audit.service';
 
 export async function POST(req: NextRequest) {
-  try {
-    const { email, password, name } = await req.json();
+  const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for') || '127.0.0.1';
+  let emailAttempt = '';
 
-    if (!email || !password) {
+  try {
+    const body = await req.json();
+
+    // Validate input schema using Zod
+    const parseResult = RegisterSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Email and password are required.' },
+        { error: parseResult.error.issues[0]?.message || 'Invalid input parameters.' },
         { status: 400 }
       );
     }
+
+    const { email, password } = parseResult.data;
+    emailAttempt = email;
 
     // 1. Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -20,6 +30,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
+      await AuditService.record({
+        action: 'AUTH_REGISTER_FAILED',
+        details: `Registration failed: account with email "${email}" already exists`,
+        ipAddress: clientIp,
+      });
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
         { status: 400 }
@@ -61,7 +76,15 @@ export async function POST(req: NextRequest) {
       getJwtSecret()
     );
 
-    // 5. Build response and set http-only cookie
+    // 5. Record successful registration event
+    await AuditService.record({
+      userId: user.id,
+      action: 'AUTH_REGISTER_SUCCESS',
+      details: `User registered successfully: "${email}"`,
+      ipAddress: clientIp,
+    });
+
+    // 6. Build response and set http-only cookie
     const response = NextResponse.json(
       {
         success: true,
@@ -69,7 +92,7 @@ export async function POST(req: NextRequest) {
           id: user.id,
           email: user.email,
           role: user.role.name,
-          name: name || user.email.split('@')[0],
+          name: user.email.split('@')[0],
         },
       },
       { status: 201 }
@@ -88,7 +111,11 @@ export async function POST(req: NextRequest) {
     return response;
 
   } catch (error: any) {
-    console.error('Registration API Error:', error);
+    await AuditService.record({
+      action: 'AUTH_REGISTER_ERROR',
+      details: `Exception occurred during registration: ${error.message || 'Unknown error'}. Attempted email: "${emailAttempt}"`,
+      ipAddress: clientIp,
+    });
     return NextResponse.json(
       { error: 'Internal server error occurred.' },
       { status: 500 }

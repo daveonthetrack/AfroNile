@@ -146,6 +146,12 @@ export default function AdminDashboardClient() {
   const [dateRange, setDateRange] = useState<'all' | '30' | '7'>('all');
   const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PAID' | 'PENDING' | 'FAILED'>('ALL');
   
+  // Pagination State
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [donationsPage, setDonationsPage] = useState(1);
+  const [ticketsPage, setTicketsPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
   // Drawer state
   const [selectedRecord, setSelectedRecord] = useState<{
     type: 'order' | 'donation';
@@ -1223,7 +1229,7 @@ export default function AdminDashboardClient() {
                         <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No matching orders found.</td>
                       </tr>
                     ) : (
-                      filteredOrders.map((order) => (
+                      filteredOrders.slice((ordersPage - 1) * ITEMS_PER_PAGE, ordersPage * ITEMS_PER_PAGE).map((order) => (
                         <tr 
                           key={order.id} 
                           onClick={() => setSelectedRecord({ type: 'order', data: order })}
@@ -1240,6 +1246,25 @@ export default function AdminDashboardClient() {
                     )}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between p-4 border-t border-white/5 bg-zinc-950/40">
+                <button
+                  disabled={ordersPage === 1}
+                  onClick={() => setOrdersPage(prev => Math.max(prev - 1, 1))}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                >
+                  Previous
+                </button>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  Page {ordersPage} of {Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE))}
+                </span>
+                <button
+                  disabled={ordersPage >= Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)}
+                  onClick={() => setOrdersPage(prev => prev + 1)}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}
@@ -1265,7 +1290,7 @@ export default function AdminDashboardClient() {
                         <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No matching contributions found.</td>
                       </tr>
                     ) : (
-                      filteredDonations.map((donation) => (
+                      filteredDonations.slice((donationsPage - 1) * ITEMS_PER_PAGE, donationsPage * ITEMS_PER_PAGE).map((donation) => (
                         <tr 
                           key={donation.id} 
                           onClick={() => setSelectedRecord({ type: 'donation', data: donation })}
@@ -1282,6 +1307,25 @@ export default function AdminDashboardClient() {
                     )}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between p-4 border-t border-white/5 bg-zinc-950/40">
+                <button
+                  disabled={donationsPage === 1}
+                  onClick={() => setDonationsPage(prev => Math.max(prev - 1, 1))}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                >
+                  Previous
+                </button>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  Page {donationsPage} of {Math.max(1, Math.ceil(filteredDonations.length / ITEMS_PER_PAGE))}
+                </span>
+                <button
+                  disabled={donationsPage >= Math.ceil(filteredDonations.length / ITEMS_PER_PAGE)}
+                  onClick={() => setDonationsPage(prev => prev + 1)}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}
@@ -1397,7 +1441,7 @@ export default function AdminDashboardClient() {
                         <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No tickets located in database records.</td>
                       </tr>
                     ) : (
-                      filteredTickets.map((ticket) => (
+                      filteredTickets.slice((ticketsPage - 1) * ITEMS_PER_PAGE, ticketsPage * ITEMS_PER_PAGE).map((ticket) => (
                         <tr key={ticket.id} className="hover:bg-zinc-900/40 transition-colors">
                           <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{ticket.id.slice(0, 18)}...</td>
                           <td className="px-6 py-4 font-semibold text-white">{ticket.eventTitle}</td>
@@ -1437,6 +1481,25 @@ export default function AdminDashboardClient() {
                     )}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between p-4 border-t border-white/5 bg-zinc-950/40">
+                <button
+                  disabled={ticketsPage === 1}
+                  onClick={() => setTicketsPage(prev => Math.max(prev - 1, 1))}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                >
+                  Previous
+                </button>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  Page {ticketsPage} of {Math.max(1, Math.ceil(filteredTickets.length / ITEMS_PER_PAGE))}
+                </span>
+                <button
+                  disabled={ticketsPage >= Math.ceil(filteredTickets.length / ITEMS_PER_PAGE)}
+                  onClick={() => setTicketsPage(prev => prev + 1)}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}

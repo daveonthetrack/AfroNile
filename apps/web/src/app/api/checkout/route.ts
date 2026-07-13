@@ -3,54 +3,54 @@ import { prisma } from '@repo/database';
 import Stripe from 'stripe';
 import { getStripeSecretKey, getAppOrigin } from '@/lib/env';
 import { getTokenFromRequest, requireSessionUser } from '@/lib/auth';
-
-interface CheckoutItem {
-  productId: string;
-  quantity: number;
-}
-
-interface CheckoutRequest {
-  items: CheckoutItem[];
-}
+import { CheckoutCartSchema } from '@/lib/validation';
+import { AuditService } from '@/lib/services/audit.service';
 
 export async function POST(req: NextRequest) {
+  const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for') || '127.0.0.1';
+  let userId = '';
+
   try {
     const sessionUser = requireSessionUser(getTokenFromRequest(req));
     if (!sessionUser) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
-    const body: CheckoutRequest = await req.json();
-    const { items } = body;
-    const userId = sessionUser.userId;
+    userId = sessionUser.userId;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'CART_ITEMS_REQUIRED' }, { status: 400 });
+    // Validate body using Zod schema
+    const body = await req.json();
+    const parseResult = CheckoutCartSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json({
+        error: 'INVALID_CART_PAYLOAD',
+        message: parseResult.error.issues[0]?.message || 'Invalid cart specification.'
+      }, { status: 400 });
     }
 
+    const { items } = parseResult.data;
+
+    // Execute atomic transaction for validation and order creation
     const transactionResult = await prisma.$transaction(async (tx) => {
       let calculatedTotalCents = 0;
       const verifiedItems: { productId: string; quantity: number; unitPriceCents: number }[] = [];
 
       for (const item of items) {
-        if (!item.productId || typeof item.quantity !== 'number' || item.quantity <= 0) {
-          throw new Error('INVALID_ITEM_SPECIFICATION');
-        }
-
+        // Validate UUID structure
         const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-        const isUuid = uuidRegex.test(item.productId);
+        const isUuid = uuidRegex.test(item.id);
 
         const product = await tx.product.findFirst({
           where: {
             OR: [
-              ...(isUuid ? [{ id: item.productId }] : []),
-              { sku: item.productId },
+              ...(isUuid ? [{ id: item.id }] : []),
+              { sku: item.id },
             ],
           },
         });
 
         if (!product) {
-          throw new Error(`PRODUCT_NOT_FOUND:${item.productId}`);
+          throw new Error(`PRODUCT_NOT_FOUND:${item.id}`);
         }
 
         if (product.stockQuantity < item.quantity) {
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Create order row in PENDING state
       const order = await tx.order.create({
         data: {
           userId,
@@ -85,13 +86,13 @@ export async function POST(req: NextRequest) {
         include: { product: true },
       });
 
-      const lineItems = orderItemsWithProducts.map((item) => ({
-        name: item.product.title,
-        unitPriceCents: item.unitPriceCents,
-        quantity: item.quantity,
-        sku: item.product.sku,
-        orderItemId: item.id,
-        productId: item.productId,
+      const lineItems = orderItemsWithProducts.map((oItem) => ({
+        name: oItem.product.title,
+        unitPriceCents: oItem.unitPriceCents,
+        quantity: oItem.quantity,
+        sku: oItem.product.sku,
+        orderItemId: oItem.id,
+        productId: oItem.productId,
       }));
 
       return {
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
       };
     });
 
+    // Initialize Stripe session creation
     const stripe = new Stripe(getStripeSecretKey(), {
       apiVersion: '2024-04-10' as Stripe.LatestApiVersion,
     });
@@ -149,6 +151,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Audit checkout logging
+    await AuditService.record({
+      userId,
+      action: 'COMMERCE_CHECKOUT_INITIATED',
+      details: `Stripe checkout session initialized for Order ID: ${transactionResult.orderId}. Total: $${(transactionResult.totalAmountCents / 100).toFixed(2)}`,
+      ipAddress: clientIp,
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -159,6 +169,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
+
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : '';
 
@@ -168,11 +179,14 @@ export async function POST(req: NextRequest) {
     if (errorMessage.startsWith('OUT_OF_STOCK:')) {
       return NextResponse.json({ error: 'OUT_OF_STOCK', details: errorMessage.split(':')[1] }, { status: 409 });
     }
-    if (errorMessage === 'INVALID_ITEM_SPECIFICATION') {
-      return NextResponse.json({ error: 'INVALID_ITEM_SPECIFICATION' }, { status: 400 });
-    }
 
-    console.error('Checkout API Error:', error);
+    await AuditService.record({
+      ...(userId ? { userId } : {}),
+      action: 'COMMERCE_CHECKOUT_FAILED',
+      details: `Checkout transaction aborted: ${errorMessage || 'Unknown checkout error'}`,
+      ipAddress: clientIp,
+    });
+
     return NextResponse.json({ error: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }
 }

@@ -33,6 +33,7 @@ model User {
   orders        Order[]
   contributions SupportContribution[]
   checkins      ConcertCheckIn[]
+  auditLogs     AuditLog[]
 
   @@index([roleId])
   @@map("users")
@@ -213,4 +214,18 @@ model EventState {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("event_states")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   String
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
 }

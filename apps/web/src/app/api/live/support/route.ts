@@ -2,23 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import Stripe from 'stripe';
 import { getStripeSecretKey, getAppOrigin } from '@/lib/env';
-import { getSessionUser, getTokenFromCookies } from '@/lib/auth';
+import { getSessionUser, getTokenFromRequest } from '@/lib/auth';
+import { TippingSchema } from '@/lib/validation';
+import { AuditService } from '@/lib/services/audit.service';
 
 export async function POST(req: NextRequest) {
+  const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for') || '127.0.0.1';
+  let userId: string | null = null;
+
   try {
-    const { amountCents, eventId, email, phone, comment } = await req.json();
+    const sessionUser = getSessionUser(getTokenFromRequest(req));
+    userId = sessionUser?.userId ?? null;
 
-    if (!amountCents || typeof amountCents !== 'number' || amountCents <= 0) {
-      return NextResponse.json({ error: 'INVALID_AMOUNT' }, { status: 400 });
+    // Validate body using Zod
+    const body = await req.json();
+    const parseResult = TippingSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json({
+        error: 'INVALID_SUPPORT_PAYLOAD',
+        message: parseResult.error.issues[0]?.message || 'Invalid parameters.'
+      }, { status: 400 });
     }
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json({ error: 'VALID_EMAIL_REQUIRED' }, { status: 400 });
-    }
+    const { amountCents, eventId, email, phone, comment } = parseResult.data;
 
-    const sessionUser = getSessionUser(getTokenFromCookies());
-    const userId = sessionUser?.userId ?? null;
-
+    // Create a temporary unverified contribution record
     const contribution = await prisma.supportContribution.create({
       data: {
         userId,
@@ -72,7 +80,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // stripeSessionId is set only after payment (webhook or success redirect)
+    // Log the transaction initialization
+    await AuditService.record({
+      ...(userId ? { userId } : {}),
+      action: 'LIVE_SUPPORT_INITIATED',
+      details: `Initialized support checkout session for event ${eventId}. Amount: $${(amountCents / 100).toFixed(2)}`,
+      ipAddress: clientIp,
+    });
 
     return NextResponse.json(
       {
@@ -83,8 +97,15 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
+
   } catch (error: unknown) {
-    console.error('Failed to create support contribution session:', error);
+    const errorMessage = error instanceof Error ? error.message : '';
+    await AuditService.record({
+      ...(userId ? { userId } : {}),
+      action: 'LIVE_SUPPORT_FAILED',
+      details: `Support contribution initialization aborted: ${errorMessage || 'Unknown error'}`,
+      ipAddress: clientIp,
+    });
     return NextResponse.json({ error: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }
 }
