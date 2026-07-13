@@ -15,8 +15,7 @@ export function CartDrawer({ userId }: CartDrawerProps) {
     setIsOpen, 
     updateQuantity, 
     removeItem, 
-    getCartTotal, 
-    clearCart 
+    getCartTotal
   } = useCartStore();
 
   const [checkoutStatus, setCheckoutStatus] = useState<{
@@ -50,6 +49,7 @@ export function CartDrawer({ userId }: CartDrawerProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Idempotency-Key': crypto.randomUUID(),
         },
         body: JSON.stringify({
           items: items.map((item) => ({
@@ -65,9 +65,8 @@ export function CartDrawer({ userId }: CartDrawerProps) {
         throw new Error(data.message || data.error || 'Checkout failed');
       }
 
-      if (data.clientSecret) {
-        clearCart();
-        window.location.href = `/checkout?client_secret=${data.clientSecret}`;
+      if (data.orderId) {
+        window.location.href = `/checkout?order_id=${encodeURIComponent(data.orderId)}`;
         return;
       }
 
@@ -77,10 +76,6 @@ export function CartDrawer({ userId }: CartDrawerProps) {
         orderId: data.orderId,
         clientSecret: data.stripeClientSecret,
       });
-
-      // Clear local cart
-      clearCart();
-
     } catch (err: any) {
       setCheckoutStatus({
         loading: false,

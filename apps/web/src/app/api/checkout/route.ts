@@ -5,10 +5,37 @@ import { getStripeSecretKey, getAppOrigin } from '@/lib/env';
 import { getTokenFromRequest, requireSessionUser } from '@/lib/auth';
 import { CheckoutCartSchema } from '@/lib/validation';
 import { AuditService } from '@/lib/services/audit.service';
+import { randomUUID } from 'crypto';
 
 export async function POST(req: NextRequest) {
   const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for') || '127.0.0.1';
   let userId = '';
+  let reservedOrderId: string | null = null;
+
+  const releaseReservation = async (orderId: string) => {
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { orderItems: true },
+      });
+
+      if (!order || order.status !== 'PENDING') return;
+
+      await Promise.all(
+        order.orderItems.map((item) =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: { stockQuantity: { increment: item.quantity } },
+          })
+        )
+      );
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: 'FAILED', fulfillmentStatus: 'FAILED' },
+      });
+    });
+  };
 
   try {
     const sessionUser = requireSessionUser(getTokenFromRequest(req));
@@ -32,7 +59,19 @@ export async function POST(req: NextRequest) {
 
     // Execute atomic transaction for validation and order creation
     const transactionResult = await prisma.$transaction(async (tx) => {
+      // 1. Verify user exists in the database to prevent foreign key errors
+      const dbUser = await tx.user.findUnique({
+        where: { id: userId },
+        select: { email: true, stripeCustomerId: true },
+      });
+
+      if (!dbUser) {
+        throw new Error('USER_NOT_FOUND');
+      }
+
       let calculatedTotalCents = 0;
+      let merchandiseSubtotal = 0;
+      let hasPhysicalMerch = false;
       const verifiedItems: { productId: string; quantity: number; unitPriceCents: number }[] = [];
 
       for (const item of items) {
@@ -53,8 +92,23 @@ export async function POST(req: NextRequest) {
           throw new Error(`PRODUCT_NOT_FOUND:${item.id}`);
         }
 
-        if (product.stockQuantity < item.quantity) {
+        const reservation = await tx.product.updateMany({
+          where: {
+            id: product.id,
+            stockQuantity: { gte: item.quantity },
+          },
+          data: {
+            stockQuantity: { decrement: item.quantity },
+          },
+        });
+
+        if (reservation.count === 0) {
           throw new Error(`OUT_OF_STOCK:${product.title}`);
+        }
+
+        if (product.type === 'MERCHANDISE') {
+          hasPhysicalMerch = true;
+          merchandiseSubtotal += product.priceCents * item.quantity;
         }
 
         calculatedTotalCents += product.priceCents * item.quantity;
@@ -65,12 +119,23 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      const shippingCents = hasPhysicalMerch ? 500 : 0;
+      const taxCents = hasPhysicalMerch ? Math.round(merchandiseSubtotal * 0.08) : 0;
+      const finalTotalCents = calculatedTotalCents + shippingCents + taxCents;
+
+      // Unique order number: AN-XXXXXX
+      const orderNumber = `AN-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+
       // Create order row in PENDING state
       const order = await tx.order.create({
         data: {
           userId,
+          orderNumber,
           status: 'PENDING',
-          totalAmountCents: calculatedTotalCents,
+          totalAmountCents: finalTotalCents,
+          taxCents,
+          shippingCents,
+          discountCents: 0,
           orderItems: {
             create: verifiedItems.map((v) => ({
               productId: v.productId,
@@ -97,10 +162,15 @@ export async function POST(req: NextRequest) {
 
       return {
         orderId: order.id,
-        totalAmountCents: calculatedTotalCents,
+        orderNumber,
+        totalAmountCents: finalTotalCents,
+        shippingCents,
+        taxCents,
         lineItems,
+        dbUser,
       };
     });
+    reservedOrderId = transactionResult.orderId;
 
     // Initialize Stripe session creation
     const stripe = new Stripe(getStripeSecretKey(), {
@@ -109,35 +179,92 @@ export async function POST(req: NextRequest) {
 
     const origin = getAppOrigin(req);
 
-    const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded' as Stripe.Checkout.SessionCreateParams.UiMode,
-      payment_method_types: ['card'],
-      line_items: transactionResult.lineItems.map((item) => ({
+    const stripeLineItems = transactionResult.lineItems.map((item) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.name,
+          metadata: {
+            sku: item.sku,
+          },
+        },
+        unit_amount: item.unitPriceCents,
+      },
+      quantity: item.quantity,
+    }));
+
+    if (transactionResult.shippingCents > 0) {
+      stripeLineItems.push({
         price_data: {
           currency: 'usd',
           product_data: {
-            name: item.name,
+            name: 'Shipping & Handling (Physical Merch)',
             metadata: {
-              sku: item.sku,
+              sku: 'SHIPPING_FEE',
             },
           },
-          unit_amount: item.unitPriceCents,
+          unit_amount: transactionResult.shippingCents,
         },
-        quantity: item.quantity,
-      })),
-      mode: 'payment',
-      return_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${transactionResult.orderId}`,
-      metadata: {
-        orderId: transactionResult.orderId,
-        userId,
-      },
-    });
+        quantity: 1,
+      });
+    }
+
+    if (transactionResult.taxCents > 0) {
+      stripeLineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Estimated Sales Tax (8%)',
+            metadata: {
+              sku: 'TAX_FEE',
+            },
+          },
+          unit_amount: transactionResult.taxCents,
+        },
+        quantity: 1,
+      });
+    }
+
+    const stripeCustomerOption = transactionResult.dbUser?.stripeCustomerId
+      ? { customer: transactionResult.dbUser.stripeCustomerId }
+      : transactionResult.dbUser?.email
+        ? { customer_email: transactionResult.dbUser.email }
+        : {};
+
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create(
+        {
+          ui_mode: 'embedded' as Stripe.Checkout.SessionCreateParams.UiMode,
+          payment_method_types: ['card'],
+          line_items: stripeLineItems,
+          mode: 'payment',
+          return_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${transactionResult.orderId}`,
+          ...stripeCustomerOption,
+          payment_intent_data: {
+            metadata: {
+              orderId: transactionResult.orderId,
+              userId,
+            },
+          },
+          metadata: {
+            orderId: transactionResult.orderId,
+            userId,
+          },
+        },
+        {
+          idempotencyKey: req.headers.get('idempotency-key') || `checkout:${transactionResult.orderId}`,
+        }
+      );
+    } catch (error) {
+      await releaseReservation(transactionResult.orderId);
+      reservedOrderId = null;
+      throw error;
+    }
 
     if (!session.client_secret) {
-      await prisma.order.update({
-        where: { id: transactionResult.orderId },
-        data: { status: 'FAILED' },
-      });
+      await releaseReservation(transactionResult.orderId);
+      reservedOrderId = null;
       return NextResponse.json(
         { error: 'PAYMENT_PORTAL_UNAVAILABLE', message: 'Unable to initialize Stripe payment session.' },
         { status: 500 }
@@ -147,7 +274,21 @@ export async function POST(req: NextRequest) {
     await prisma.order.update({
       where: { id: transactionResult.orderId },
       data: {
-        stripePaymentIntentId: session.id,
+        stripeSessionId: session.id,
+      },
+    });
+    reservedOrderId = null;
+
+    // Log a CHECKOUT_INIT event in our AnalyticsEvent table
+    await prisma.analyticsEvent.create({
+      data: {
+        eventType: 'CHECKOUT_INIT',
+        userId,
+        details: JSON.stringify({
+          orderId: transactionResult.orderId,
+          orderNumber: transactionResult.orderNumber,
+          totalAmountCents: transactionResult.totalAmountCents,
+        }),
       },
     });
 
@@ -155,7 +296,7 @@ export async function POST(req: NextRequest) {
     await AuditService.record({
       userId,
       action: 'COMMERCE_CHECKOUT_INITIATED',
-      details: `Stripe checkout session initialized for Order ID: ${transactionResult.orderId}. Total: $${(transactionResult.totalAmountCents / 100).toFixed(2)}`,
+      details: `Stripe checkout session initialized for Order Number: ${transactionResult.orderNumber} (ID: ${transactionResult.orderId}). Total: $${(transactionResult.totalAmountCents / 100).toFixed(2)}`,
       ipAddress: clientIp,
     });
 
@@ -163,15 +304,31 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         orderId: transactionResult.orderId,
+        orderNumber: transactionResult.orderNumber,
         totalAmountCents: transactionResult.totalAmountCents,
-        clientSecret: session.client_secret,
-        stripePaymentIntentId: session.id,
+        stripeSessionId: session.id,
       },
       { status: 201 }
     );
 
   } catch (error: unknown) {
+    if (reservedOrderId) {
+      try {
+        await releaseReservation(reservedOrderId);
+      } catch (releaseError) {
+        console.error('Checkout stock reservation release failed:', releaseError);
+      }
+    }
     const errorMessage = error instanceof Error ? error.message : '';
+
+    if (errorMessage === 'USER_NOT_FOUND') {
+      const response = NextResponse.json(
+        { error: 'UNAUTHORIZED', message: 'User session is invalid. Please log in again.' },
+        { status: 401 }
+      );
+      response.cookies.delete('token');
+      return response;
+    }
 
     if (errorMessage.startsWith('PRODUCT_NOT_FOUND:')) {
       return NextResponse.json({ error: 'PRODUCT_NOT_FOUND', details: errorMessage.split(':')[1] }, { status: 404 });

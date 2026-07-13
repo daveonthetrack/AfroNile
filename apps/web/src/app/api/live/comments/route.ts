@@ -11,8 +11,6 @@ export async function GET() {
           { comment: { not: null } },
           { comment: { not: '' } },
           { stripeSessionId: { not: null } },
-          { NOT: { stripeSessionId: { startsWith: 'mock_stripe_session_' } } },
-          { NOT: { stripeSessionId: { startsWith: 'pending_' } } },
         ],
       },
       orderBy: { createdAt: 'desc' },

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import Stripe from 'stripe';
-import { getStripeSecretKey } from '@/lib/env';
+import { getJwtSecret, getStripeSecretKey } from '@/lib/env';
+import { verifyToken } from '@repo/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,16 +20,22 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const token = req.cookies.get('token')?.value;
+    const sessionUser = token ? verifyToken(token, getJwtSecret()) : null;
+    if (!sessionUser) {
+      return NextResponse.redirect(new URL('/login?redirect=/orders', req.url));
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: orderId },
     });
 
-    if (!order) {
+    if (!order || order.userId !== sessionUser.userId || order.stripeSessionId !== sessionId) {
       return NextResponse.redirect(new URL(`/shop?error=order_not_found&order_id=${orderId}`, req.url));
     }
 
     if (order.status === 'PAID') {
-      return NextResponse.redirect(new URL(`/tickets?success=true&order_id=${orderId}`, req.url));
+      return NextResponse.redirect(new URL(`/orders?success=true&order_id=${orderId}`, req.url));
     }
 
     const stripe = new Stripe(getStripeSecretKey(), {
@@ -57,10 +64,10 @@ export async function GET(req: NextRequest) {
     }
 
     if (currentStatus === 'PAID') {
-      return NextResponse.redirect(new URL(`/tickets?success=true&order_id=${orderId}`, req.url));
+      return NextResponse.redirect(new URL(`/orders?success=true&order_id=${orderId}`, req.url));
     }
 
-    return NextResponse.redirect(new URL(`/tickets?processing=true&order_id=${orderId}`, req.url));
+    return NextResponse.redirect(new URL(`/orders?processing=true&order_id=${orderId}`, req.url));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Checkout success verification error:', error);

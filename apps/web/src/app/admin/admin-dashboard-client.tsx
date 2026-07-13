@@ -24,7 +24,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Bell,
   ChevronDown,
   LayoutDashboard,
   Sliders,
@@ -36,6 +35,7 @@ interface Metrics {
   totalOrders: number;
   paidOrders: number;
   totalRevenueCents: number;
+  totalSalesCents: number;
   totalDonationsCount: number;
   totalDonationsCents: number;
   totalUsers: number;
@@ -98,13 +98,6 @@ export default function AdminDashboardClient() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [workspace, setWorkspace] = useState<'AfroNile Studio' | 'Nile Records'>('AfroNile Studio');
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const notifications = [
-    "New support contribution from Nairobi: $25.00",
-    "Ticket validation complete for event: Nairobi Release Concert",
-    "Inventory alert: Album Vinyl stock is below 10 units"
-  ];
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -159,7 +152,7 @@ export default function AdminDashboardClient() {
   
   // Advanced filters
   const [dateRange, setDateRange] = useState<'all' | '30' | '7'>('all');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PAID' | 'PENDING' | 'FAILED'>('ALL');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PAID' | 'PENDING' | 'FAILED' | 'SHIPPED' | 'REFUNDED'>('ALL');
   
   // Pagination State
   const [ordersPage, setOrdersPage] = useState(1);
@@ -218,45 +211,6 @@ export default function AdminDashboardClient() {
     fetchStats();
   }, []);
 
-  // Simulator actions handlers
-  const handleSimulateOrder = async () => {
-    try {
-      setRefreshing(true);
-      const res = await fetch('/api/admin/simulate/order', { method: 'POST' });
-      if (res.ok) {
-        triggerQuickAction("Developer Utility: Mock PAID store transaction generated!");
-        await fetchStats(true);
-      } else {
-        const data = await res.json();
-        triggerQuickAction(`Simulation error: ${data.error || 'Request failed'}`);
-      }
-    } catch (e) {
-      console.error(e);
-      triggerQuickAction("Network error trying to simulate transaction.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const handleSimulateDonation = async () => {
-    try {
-      setRefreshing(true);
-      const res = await fetch('/api/admin/simulate/donation', { method: 'POST' });
-      if (res.ok) {
-        triggerQuickAction("Developer Utility: Mock Support Contribution created!");
-        await fetchStats(true);
-      } else {
-        const data = await res.json();
-        triggerQuickAction(`Simulation error: ${data.error || 'Request failed'}`);
-      }
-    } catch (e) {
-      console.error(e);
-      triggerQuickAction("Network error trying to simulate contribution.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
   const handleResetScans = async () => {
     try {
       setRefreshing(true);
@@ -309,6 +263,53 @@ export default function AdminDashboardClient() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleMarkShipped = async (orderId: string) => {
+    try {
+      setRefreshing(true);
+      const res = await fetch('/api/admin/orders/ship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      if (res.ok) {
+        triggerQuickAction("Order marked as shipped successfully!");
+        setSelectedRecord(null);
+        await fetchStats(true);
+      } else {
+        const data = await res.json();
+        triggerQuickAction(`Shipment error: ${data.error || 'Request failed'}`);
+      }
+    } catch (err) {
+      triggerQuickAction("Network error attempting to ship order.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefundOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to refund this order? This will issue a refund on Stripe and void associated tickets.")) return;
+    try {
+      setRefreshing(true);
+      const res = await fetch('/api/admin/orders/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      if (res.ok) {
+        triggerQuickAction("Order refunded successfully!");
+        setSelectedRecord(null);
+        await fetchStats(true);
+      } else {
+        const data = await res.json();
+        triggerQuickAction(`Refund error: ${data.error || 'Request failed'}`);
+      }
+    } catch (err) {
+      triggerQuickAction("Network error attempting to refund order.");
     } finally {
       setRefreshing(false);
     }
@@ -869,32 +870,6 @@ export default function AdminDashboardClient() {
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            {/* Notifications */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="h-8.5 w-8.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center text-zinc-355 hover:text-white transition cursor-pointer relative"
-              >
-                <Bell className="h-3.5 w-3.5" />
-                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 top-10 z-50 w-72 bg-zinc-900 border border-zinc-800 rounded-md p-1 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150 text-left">
-                  <div className="px-3 py-2 border-b border-zinc-800">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">System log events</p>
-                  </div>
-                  <div className="divide-y divide-zinc-800">
-                    {notifications.map((n, idx) => (
-                      <div key={idx} className="px-3 py-2.5 text-xs text-zinc-300 hover:bg-zinc-850/50">
-                        {n}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Action launcher */}
             <a
               href="/live/screen"
@@ -939,7 +914,7 @@ export default function AdminDashboardClient() {
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Total Sales</span>
                       <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
-                        {formatCents(metrics.totalRevenueCents)}
+                        {formatCents(metrics.totalSalesCents)}
                       </h3>
                     </div>
                     <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-primary">
@@ -1250,20 +1225,6 @@ export default function AdminDashboardClient() {
                   {process.env.NODE_ENV !== 'production' && (
                     <>
                       <button
-                        onClick={handleSimulateOrder}
-                        disabled={refreshing}
-                        className="h-9 px-3.5 rounded bg-primary hover:bg-primary/95 text-xs font-bold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
-                      >
-                        Simulate Order Payment
-                      </button>
-                      <button
-                        onClick={handleSimulateDonation}
-                        disabled={refreshing}
-                        className="h-9 px-3.5 rounded bg-violet-600 hover:bg-violet-700 text-xs font-bold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
-                      >
-                        Simulate Donation
-                      </button>
-                      <button
                         onClick={handleStripeSync}
                         disabled={refreshing}
                         className="h-9 px-3.5 rounded bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
@@ -1324,6 +1285,8 @@ export default function AdminDashboardClient() {
                     >
                       <option value="ALL" className="bg-zinc-950">All Statuses</option>
                       <option value="PAID" className="bg-zinc-950">Paid</option>
+                      <option value="SHIPPED" className="bg-zinc-950">Shipped</option>
+                      <option value="REFUNDED" className="bg-zinc-950">Refunded</option>
                       <option value="PENDING" className="bg-zinc-950">Pending</option>
                       <option value="FAILED" className="bg-zinc-950">Failed</option>
                     </select>
@@ -1784,6 +1747,10 @@ export default function AdminDashboardClient() {
                   <div className="space-y-5">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Order Number</span>
+                        <p className="text-xs text-white font-mono select-all">{selectedRecord.data.orderNumber || 'N/A'}</p>
+                      </div>
+                      <div className="space-y-1">
                         <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Account Holder</span>
                         <p className="text-xs text-white font-semibold">{selectedRecord.data.email}</p>
                       </div>
@@ -1792,13 +1759,49 @@ export default function AdminDashboardClient() {
                         <div>{getStatusBadge(selectedRecord.data.status)}</div>
                       </div>
                       <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Fulfillment Status</span>
+                        <p className="text-xs text-zinc-300 font-semibold">{selectedRecord.data.fulfillmentStatus || 'PENDING'}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Refund Status</span>
+                        <p className="text-xs text-zinc-300 font-semibold">{selectedRecord.data.refundStatus || 'NONE'}</p>
+                      </div>
+                      <div className="space-y-1">
                         <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Paid Value</span>
                         <p className="text-xs text-white font-bold">{formatCents(selectedRecord.data.amountCents)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Estimated Tax</span>
+                        <p className="text-xs text-zinc-300 font-mono">{formatCents(selectedRecord.data.taxCents || 0)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Shipping & Handling</span>
+                        <p className="text-xs text-zinc-300 font-mono">{formatCents(selectedRecord.data.shippingCents || 0)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Discounts applied</span>
+                        <p className="text-xs text-zinc-300 font-mono">{formatCents(selectedRecord.data.discountCents || 0)}</p>
                       </div>
                       <div className="space-y-1">
                         <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Timestamp</span>
                         <p className="text-xs text-zinc-300 font-mono">{new Date(selectedRecord.data.createdAt).toLocaleString()}</p>
                       </div>
+                      <div className="space-y-1 col-span-2">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Stripe Session ID</span>
+                        <p className="text-[10px] text-zinc-400 font-mono select-all truncate">{selectedRecord.data.stripeSessionId || 'N/A'}</p>
+                      </div>
+                      <div className="space-y-1 col-span-2">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Stripe Payment Intent ID</span>
+                        <p className="text-[10px] text-zinc-400 font-mono select-all truncate">{selectedRecord.data.stripePaymentIntentId || 'N/A'}</p>
+                      </div>
+                      {selectedRecord.data.receiptUrl && (
+                        <div className="space-y-1 col-span-2">
+                          <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Official Invoice Receipt</span>
+                          <a href={selectedRecord.data.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-semibold hover:underline block truncate">
+                            {selectedRecord.data.receiptUrl}
+                          </a>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2 border border-zinc-900 bg-zinc-900/10 p-4 rounded-md">
@@ -1864,19 +1867,41 @@ export default function AdminDashboardClient() {
             </div>
 
             {/* Drawer footer buttons */}
-            <div className="pt-4 border-t border-zinc-900 flex gap-3">
-              <button
-                onClick={() => setShowRawJson(!showRawJson)}
-                className="h-10 rounded-md bg-zinc-900 hover:bg-zinc-855 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1"
-              >
-                <span>{showRawJson ? 'Hide Payload' : 'Show Payload'}</span>
-              </button>
-              <button
-                onClick={() => { setSelectedRecord(null); setShowRawJson(false); }}
-                className="h-10 rounded-md text-xs font-semibold border transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1 bg-zinc-900 border-zinc-800 text-zinc-455 hover:bg-zinc-855 hover:text-white"
-              >
-                Close View
-              </button>
+            <div className="pt-4 border-t border-zinc-900 flex flex-col gap-2">
+              {selectedRecord.type === 'order' && (
+                <div className="flex gap-2">
+                  {selectedRecord.data.status === 'PAID' && (
+                    <button
+                      onClick={() => handleMarkShipped(selectedRecord.data.id)}
+                      className="h-10 rounded-md bg-blue-600 hover:bg-blue-750 text-xs font-semibold text-white transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1"
+                    >
+                      Dispatch Shipment
+                    </button>
+                  )}
+                  {(selectedRecord.data.status === 'PAID' || selectedRecord.data.status === 'SHIPPED') && (
+                    <button
+                      onClick={() => handleRefundOrder(selectedRecord.data.id)}
+                      className="h-10 rounded-md bg-red-600 hover:bg-red-750 text-xs font-semibold text-white transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1"
+                    >
+                      Refund Order
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowRawJson(!showRawJson)}
+                  className="h-10 rounded-md bg-zinc-900 hover:bg-zinc-855 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1"
+                >
+                  <span>{showRawJson ? 'Hide Payload' : 'Show Payload'}</span>
+                </button>
+                <button
+                  onClick={() => { setSelectedRecord(null); setShowRawJson(false); }}
+                  className="h-10 rounded-md text-xs font-semibold border transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1 bg-zinc-900 border-zinc-800 text-zinc-455 hover:bg-zinc-855 hover:text-white"
+                >
+                  Close View
+                </button>
+              </div>
             </div>
 
           </div>

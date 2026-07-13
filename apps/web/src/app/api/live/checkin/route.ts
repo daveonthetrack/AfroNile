@@ -11,10 +11,25 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionUser = getSessionUser(getTokenFromCookies());
-    const userId = sessionUser?.userId ?? null;
+    let userId = sessionUser?.userId ?? null;
+    let invalidSession = false;
+
+    if (userId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!dbUser) {
+        userId = null;
+        invalidSession = true;
+      }
+    }
 
     if (!userId) {
-      return NextResponse.json({ success: true, anonymous: true });
+      const response = NextResponse.json({ success: true, anonymous: true });
+      if (invalidSession) {
+        response.cookies.delete('token');
+      }
+      return response;
     }
 
     const existingCheckIn = await prisma.concertCheckIn.findFirst({
@@ -32,7 +47,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    if (invalidSession) {
+      response.cookies.delete('token');
+    }
+    return response;
   } catch (error: unknown) {
     console.error('Failed to check in:', error);
     return NextResponse.json({ error: 'INTERNAL_SERVER_ERROR' }, { status: 500 });

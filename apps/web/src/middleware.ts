@@ -7,9 +7,9 @@ import { rateLimiter } from './lib/rate-limit';
 const SECURITY_HEADERS = {
   'Content-Security-Policy': 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com; " +
-    "connect-src 'self' https://api.stripe.com wss://*.vercel.com; " +
-    "frame-src 'self' https://js.stripe.com; " +
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com; " +
+    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com wss://*.vercel.com; " +
+    "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: https://*.stripe.com https://images.unsplash.com; " +

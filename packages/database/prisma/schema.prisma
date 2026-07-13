@@ -23,17 +23,19 @@ enum OrderStatus {
 }
 
 model User {
-  id            String                @id @default(uuid()) @db.Uuid
-  email         String                @unique
-  passwordHash  String                @map("password_hash")
-  roleId        Int                   @map("role_id")
-  role          Role                  @relation(fields: [roleId], references: [id])
-  createdAt     DateTime              @default(now()) @map("created_at")
-  updatedAt     DateTime              @updatedAt @map("updated_at")
-  orders        Order[]
-  contributions SupportContribution[]
-  checkins      ConcertCheckIn[]
-  auditLogs     AuditLog[]
+  id               String                @id @default(uuid()) @db.Uuid
+  email            String                @unique
+  passwordHash     String                @map("password_hash")
+  roleId           Int                   @map("role_id")
+  role             Role                  @relation(fields: [roleId], references: [id])
+  stripeCustomerId String?               @unique @map("stripe_customer_id")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+  orders           Order[]
+  contributions    SupportContribution[]
+  checkins         ConcertCheckIn[]
+  auditLogs        AuditLog[]
+  downloads        Download[]
 
   @@index([roleId])
   @@map("users")
@@ -96,6 +98,7 @@ model Product {
   stockQuantity Int         @map("stock_quantity")
   imageUrl      String?     @map("image_url")
   orderItems    OrderItem[]
+  downloads     Download[]
 
   @@map("products")
 }
@@ -118,15 +121,26 @@ model Event {
 }
 
 model Order {
-  id                    String      @id @default(uuid()) @db.Uuid
-  userId                String      @map("user_id") @db.Uuid
-  user                  User        @relation(fields: [userId], references: [id])
-  status                OrderStatus @default(PENDING)
-  totalAmountCents      Int         @map("total_amount_cents")
-  stripePaymentIntentId String?     @unique @map("stripe_payment_intent_id")
-  createdAt             DateTime    @default(now()) @map("created_at")
-  updatedAt             DateTime    @updatedAt @map("updated_at")
+  id                    String        @id @default(uuid()) @db.Uuid
+  orderNumber           String?       @unique @map("order_number")
+  userId                String        @map("user_id") @db.Uuid
+  user                  User          @relation(fields: [userId], references: [id])
+  status                OrderStatus   @default(PENDING)
+  totalAmountCents      Int           @map("total_amount_cents")
+  taxCents              Int           @default(0) @map("tax_cents")
+  discountCents         Int           @default(0) @map("discount_cents")
+  shippingCents         Int           @default(0) @map("shipping_cents")
+  stripeSessionId       String?       @unique @map("stripe_session_id")
+  stripePaymentIntentId String?       @unique @map("stripe_payment_intent_id")
+  receiptUrl            String?       @map("receipt_url")
+  refundStatus          String?       @map("refund_status")
+  fulfillmentStatus     String        @default("PENDING") @map("fulfillment_status")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
   orderItems            OrderItem[]
+  payments              Payment[]
+  transactions          Transaction[]
+  downloads             Download[]
 
   @@index([userId])
   @@map("orders")
@@ -228,4 +242,87 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@map("audit_logs")
+}
+
+model Payment {
+  id                    String   @id @default(uuid()) @db.Uuid
+  orderId               String   @map("order_id") @db.Uuid
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stripePaymentIntentId String?  @map("stripe_payment_intent_id")
+  amountCents           Int      @map("amount_cents")
+  currency              String   @default("usd")
+  status                String   // succeeded, failed, refunded, processing, etc.
+  receiptUrl            String?  @map("receipt_url")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+model Transaction {
+  id              String   @id @default(uuid()) @db.Uuid
+  orderId         String?  @map("order_id") @db.Uuid
+  order           Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type            String   // CHARGE, REFUND, DONATION
+  amountCents     Int      @map("amount_cents")
+  stripeSessionId String?  @map("stripe_session_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@map("transactions")
+}
+
+model Download {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId       String?  @map("order_id") @db.Uuid
+  order         Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String   @map("product_id") @db.Uuid
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  downloadToken String   @unique @map("download_token")
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([productId])
+  @@map("downloads")
+}
+
+model RevenueReport {
+  id                String   @id @default(uuid()) @db.Uuid
+  date              DateTime @unique // The day this report represents (start of day)
+  grossRevenueCents Int      @map("gross_revenue_cents")
+  netRevenueCents   Int      @map("net_revenue_cents")
+  salesCents        Int      @map("sales_cents")
+  donationsCents    Int      @map("donations_cents")
+  refundsCents      Int      @map("refunds_cents")
+  orderCount        Int      @map("order_count")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("revenue_reports")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventType String   @map("event_type") // PAGE_VIEW, CHECKOUT_INIT, CHECKOUT_SUCCESS, TICKET_SCAN, etc.
+  details   String?  // JSON string or description
+  userId    String?  @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventType])
+  @@index([userId])
+  @@map("analytics_events")
+}
+
+model ProcessedStripeEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @unique @map("event_id")
+  eventType String   @map("event_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("processed_stripe_events")
 }

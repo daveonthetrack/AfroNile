@@ -23,10 +23,7 @@ export async function GET(req: NextRequest) {
     });
 
     const paidContributions = contributions.filter(
-      (entry) =>
-        entry.stripeSessionId &&
-        !entry.stripeSessionId.startsWith('mock_stripe_session_') &&
-        !entry.stripeSessionId.startsWith('pending_')
+      (entry) => entry.stripeSessionId
     );
 
     let csv = 'Email,Phone,Donation Amount,Comment,Pledge Date\n';
