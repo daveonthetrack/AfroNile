@@ -822,7 +822,7 @@ export default function AdminDashboardClient() {
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         
         {/* Top Sticky Header */}
-        <header className="sticky top-0 z-30 h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-6">
+        <header className="h-14 border-b border-zinc-900 bg-zinc-950 flex items-center justify-between px-6 shrink-0">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-zinc-400">
             <span className="text-zinc-500">Workspace</span>
@@ -910,7 +910,7 @@ export default function AdminDashboardClient() {
         </header>
 
         {/* Content Body Pane */}
-        <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 p-6 w-full space-y-6">
           
           {/* Tab 1: Overview Dashboard */}
           {activeTab === 'overview' && metrics && (
