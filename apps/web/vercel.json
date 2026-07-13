@@ -1,4 +1,4 @@
 {
   "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm --filter=@repo/database db:generate && pnpm --filter=@repo/database db:deploy && pnpm --filter=@repo/auth build && pnpm --filter=@repo/web build"
+  "buildCommand": "cd ../.. && pnpm --filter=@repo/database db:generate && pnpm --filter=@repo/auth build && pnpm --filter=@repo/web build"
 }
