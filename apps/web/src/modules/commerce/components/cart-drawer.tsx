@@ -52,9 +52,9 @@ export function CartDrawer({ userId }: CartDrawerProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: items.map(item => ({
-            productId: item.id,
-            quantity: item.quantity
+          items: items.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
           })),
         }),
       });
@@ -62,7 +62,7 @@ export function CartDrawer({ userId }: CartDrawerProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Checkout failed');
+        throw new Error(data.message || data.error || 'Checkout failed');
       }
 
       if (data.clientSecret) {

@@ -105,13 +105,13 @@ export function SupportModule({
     setLoading(true);
 
     try {
+      const trimmedPhone = phone.trim();
       const payload = {
         amountCents: finalAmountCents,
-        eventId,
+        ...(eventId ? { eventId } : {}),
         email: email.trim(),
-        phone: phone.trim() || null,
+        phone: trimmedPhone || null,
         comment: comment.trim() || null,
-        paymentType: 'CARD', // default wrapper
       };
 
       const res = await fetch('/api/live/support', {
@@ -122,7 +122,7 @@ export function SupportModule({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit backing.');
+        throw new Error(data.message || data.error || 'Failed to submit backing.');
       }
 
       if (data.clientSecret) {
@@ -160,13 +160,13 @@ export function SupportModule({
       {/* 1. Share Your Story Card */}
       <div className="glass-card rounded-[2rem] p-5 space-y-3 shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden border border-white/5 hover:border-primary/20">
         <div className="flex justify-between items-center">
-          <h4 className="text-xs font-bold tracking-wider text-zinc-400 uppercase font-mono">Share Your Story</h4>
+          <h4 className="text-sm font-bold tracking-wider text-zinc-400 uppercase font-mono">Share Your Story</h4>
           <span className="text-[8px] font-mono text-primary uppercase tracking-widest font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">Stage Feed</span>
         </div>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="SHARE YOUR CONCERT EXPERIENCE OR VIBE..."
+          placeholder="Type here..."
           rows={3}
           className="w-full bg-transparent border-0 text-xs font-mono font-medium placeholder-zinc-650 text-white focus:outline-none resize-none uppercase"
           disabled={!!stripeClientSecret}
@@ -175,7 +175,7 @@ export function SupportModule({
 
       {/* 2. Join the Family Card */}
       <div className="glass-card rounded-[2rem] p-5 space-y-3.5 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/5 hover:border-primary/20">
-        <h4 className="text-xs font-bold tracking-wider text-zinc-400 uppercase font-mono">Join the Family</h4>
+        <h4 className="text-sm font-bold tracking-wider text-zinc-400 uppercase font-mono">Join the Family</h4>
         <div className="space-y-2.5">
           <input
             type="email"

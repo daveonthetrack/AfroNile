@@ -4,26 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SupportModule } from '../../modules/live/components/support-module';
 import { useLiveState } from '../../modules/live/hooks/useLiveState';
-import { LiveHero } from '../../modules/live/components/live-hero';
-import { LivePlayer } from '../../modules/live/components/live-player';
-import { LiveFeed } from '../../modules/live/components/live-feed';
 import { UpcomingShows } from '../../modules/live/components/upcoming-shows';
-import { JourneyProgress } from '../../modules/live/components/journey-progress';
 
 interface LiveClientProps {
-  albums: {
-    id: string;
-    title: string;
-    coverImageUrl: string;
-    priceCents: number;
-    songs: {
-      id: string;
-      title: string;
-      trackNumber: number;
-      audioUrl: string;
-      durationSeconds: number;
-    }[];
-  }[];
   events: {
     id: string;
     title: string;
@@ -41,16 +24,17 @@ interface LiveClientProps {
   }[];
 }
 
-export function LiveClient({ albums, events, products }: LiveClientProps) {
+export function LiveClient({ events, products }: LiveClientProps) {
   const searchParams = useSearchParams();
   const nextShow = events[0] || null;
-  const initialShowId = nextShow?.id || '';
+  const showParam = searchParams.get('show');
+  const initialShowId = showParam || nextShow?.id || '';
 
   const [showSplash, setShowSplash] = useState(false);
   const [splashFade, setSplashFade] = useState(false);
 
   // Connect to SSE event stream and sync live status
-  const { liveStatus, feedItems, checkedIn, checkingIn, checkInError } = useLiveState(initialShowId);
+  const { checkInError } = useLiveState(initialShowId);
 
   // Form states lifted to handle interactive wave feedback
   const [selectedTier, setSelectedTier] = useState<number | null>(10);
@@ -160,27 +144,6 @@ export function LiveClient({ albums, events, products }: LiveClientProps) {
             Check-in Failed: {checkInError}
           </div>
         )}
-
-        {/* Live Performance Details & Check-In */}
-        <LiveHero
-          venueName={liveStatus?.venueName || nextShow?.venueName || 'Nile Arena'}
-          tourName={liveStatus?.tourName || nextShow?.title || 'Nile Waves Live'}
-          checkedIn={checkedIn}
-          checkingIn={checkingIn}
-        />
-
-        {/* Live Setlist Player Status */}
-        <LivePlayer
-          currentSong={liveStatus?.currentSong || null}
-          setlistProgress={liveStatus?.setlistProgress || { current: 1, total: 10 }}
-          albumCoverUrl={albums[0]?.coverImageUrl || '/placeholder.jpg'}
-        />
-
-        {/* Live Feed Activity */}
-        <LiveFeed items={feedItems} />
-
-        {/* Live Journey Progress / Momentum */}
-        <JourneyProgress />
 
         {/* Support and Reflections Module */}
         <SupportModule 

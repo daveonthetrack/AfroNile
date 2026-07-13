@@ -27,12 +27,6 @@ export function LiveHero({ venueName, tourName, checkedIn, checkingIn }: LiveHer
         <div className="absolute -bottom-45 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-[100px] opacity-50 animate-pulse duration-[8000ms]" />
       </div>
 
-      {/* Subtle Grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] z-0" />
-
-      {/* Dark Vignette */}
-      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-transparent z-0" />
-
       <div className="relative z-10 space-y-6 max-w-2xl">
         <div className="flex flex-wrap gap-2.5">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold text-zinc-400 bg-white/5 border border-white/10 uppercase tracking-widest backdrop-blur-sm">

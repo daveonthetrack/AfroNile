@@ -24,15 +24,6 @@ export default async function LiveCompanionPage() {
     );
   }
 
-  const albums = await prisma.album.findMany({
-    where: { artistId: artist.id },
-    include: {
-      songs: {
-        orderBy: { trackNumber: 'asc' },
-      },
-    },
-  });
-
   const events = await prisma.event.findMany({
     where: { artistId: artist.id },
     orderBy: { eventDate: 'asc' },
@@ -44,19 +35,6 @@ export default async function LiveCompanionPage() {
 
   return (
     <LiveClient
-      albums={albums.map((a) => ({
-        id: a.id,
-        title: a.title,
-        coverImageUrl: a.coverImageUrl,
-        priceCents: a.priceCents,
-        songs: a.songs.map((s) => ({
-          id: s.id,
-          title: s.title,
-          trackNumber: s.trackNumber,
-          audioUrl: s.audioUrl,
-          durationSeconds: s.durationSeconds,
-        })),
-      }))}
       events={events.map((e) => ({
         id: e.id,
         title: e.title,
