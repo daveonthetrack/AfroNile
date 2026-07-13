@@ -7,14 +7,9 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Access exclusive music, cryptographic digital tickets, and merchandise directly from AfroNile.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#09090b', // matching our globals zinc-950 background
-    theme_color: '#d97706',      // matching our amber-600 primary brand color
+    background_color: '#0f0a08', // matching our new warm espresso background
+    theme_color: '#d95f30',      // matching our terracotta primary brand color
     icons: [
-      {
-        src: '/favicon.ico',
-        sizes: 'any',
-        type: 'image/x-icon',
-      },
       {
         src: '/icon-192.png',
         sizes: '192x192',
