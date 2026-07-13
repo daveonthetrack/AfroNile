@@ -437,8 +437,8 @@ export default function AdminDashboardClient() {
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-red-500/5 border border-red-500/10 rounded-3xl p-8 text-center space-y-5 backdrop-blur-md">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20">
+      <div className="max-w-md mx-auto my-16 bg-red-500/5 border border-red-500/10 rounded-lg p-8 text-center space-y-5 backdrop-blur-md">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-red-500/10 text-red-500 border border-red-500/20">
           <AlertTriangle className="h-7 w-7" />
         </div>
         <div className="space-y-2">
@@ -447,7 +447,7 @@ export default function AdminDashboardClient() {
         </div>
         <button
           onClick={() => fetchStats()}
-          className="h-11 w-full bg-zinc-900 border border-white/5 text-xs font-semibold text-white rounded-xl hover:bg-zinc-800 transition active:scale-98"
+          className="h-11 w-full bg-zinc-900 border border-zinc-800 text-xs font-semibold text-white rounded-md hover:bg-zinc-800 transition active:scale-98"
         >
           Re-Authenticate & Retry
         </button>
@@ -691,14 +691,14 @@ export default function AdminDashboardClient() {
       
       {/* Toast Alert Box */}
       {quickActionMsg && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl bg-zinc-950 border border-primary/30 text-white text-xs font-medium shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-lg bg-zinc-950 border border-primary/30 text-white text-xs font-medium  animate-in fade-in slide-in-from-top-4 duration-300">
           <CheckCircle2 className="h-5 w-5 text-primary animate-bounce" />
           <span>{quickActionMsg}</span>
         </div>
       )}
 
       {/* Top Auditing Status Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-800 pb-6">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -719,7 +719,7 @@ export default function AdminDashboardClient() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExport}
-            className="h-10 px-4 rounded-xl bg-zinc-950 border border-white/5 hover:border-white/10 text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-2 active:scale-95 transition select-none cursor-pointer"
+            className="h-10 px-4 rounded-md bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-2 active:scale-95 transition select-none cursor-pointer"
           >
             <Download className="h-3.5 w-3.5" />
             <span>Export View</span>
@@ -729,7 +729,7 @@ export default function AdminDashboardClient() {
             href="/live/screen"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 active:scale-95 transition select-none cursor-pointer"
+            className="h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 active:scale-95 transition select-none cursor-pointer"
           >
             <Maximize2 className="h-3.5 w-3.5 text-zinc-400" />
             <span>Launch Live Display</span>
@@ -738,7 +738,7 @@ export default function AdminDashboardClient() {
           <button
             onClick={() => fetchStats(true)}
             disabled={refreshing}
-            className="h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 active:scale-95 transition disabled:opacity-50 select-none cursor-pointer"
+            className="h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 active:scale-95 transition disabled:opacity-50 select-none cursor-pointer"
           >
             <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
             <span>{refreshing ? 'Syncing...' : 'Sync Console'}</span>
@@ -752,8 +752,8 @@ export default function AdminDashboardClient() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Store Revenue */}
-            <div className="bg-zinc-950/60 border border-white/5 p-6 rounded-2xl hover:border-white/10 hover:bg-zinc-900/10 transition-all duration-300 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
+              
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Store Sales</span>
@@ -761,7 +761,7 @@ export default function AdminDashboardClient() {
                     {formatCents(metrics.totalRevenueCents)}
                   </h3>
                 </div>
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-800 text-emerald-400">
                   <DollarSign className="h-5 w-5" />
                 </div>
               </div>
@@ -772,8 +772,8 @@ export default function AdminDashboardClient() {
             </div>
 
             {/* Support Contributions */}
-            <div className="bg-zinc-950/60 border border-white/5 p-6 rounded-2xl hover:border-white/10 hover:bg-zinc-900/10 transition-all duration-300 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-colors" />
+            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
+              
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Contributions</span>
@@ -781,7 +781,7 @@ export default function AdminDashboardClient() {
                     {formatCents(metrics.totalDonationsCents)}
                   </h3>
                 </div>
-                <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-800 text-violet-400">
                   <HeartHandshake className="h-5 w-5" />
                 </div>
               </div>
@@ -792,8 +792,8 @@ export default function AdminDashboardClient() {
             </div>
 
             {/* Fan Database */}
-            <div className="bg-zinc-950/60 border border-white/5 p-6 rounded-2xl hover:border-white/10 hover:bg-zinc-900/10 transition-all duration-300 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
+            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
+              
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Registered Fans</span>
@@ -801,7 +801,7 @@ export default function AdminDashboardClient() {
                     {metrics.totalUsers}
                   </h3>
                 </div>
-                <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-800 text-blue-400">
                   <Users className="h-5 w-5" />
                 </div>
               </div>
@@ -812,8 +812,8 @@ export default function AdminDashboardClient() {
             </div>
 
             {/* Ticket scanning gauge progress */}
-            <div className="bg-zinc-950/60 border border-white/5 p-6 rounded-2xl hover:border-white/10 hover:bg-zinc-900/10 transition-all duration-300 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/10 transition-colors" />
+            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
+              
               
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
@@ -860,7 +860,7 @@ export default function AdminDashboardClient() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             {/* Sales Chart */}
-            <div className="bg-zinc-950/60 border border-white/5 p-6 rounded-2xl space-y-4">
+            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg space-y-4">
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">30-Day Sales Ledger</h3>
@@ -871,7 +871,7 @@ export default function AdminDashboardClient() {
                 </span>
               </div>
               
-              <div className="relative h-[220px] w-full bg-zinc-900/10 border border-white/5 rounded-xl p-2 overflow-hidden flex items-center justify-center">
+              <div className="relative h-[220px] w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 overflow-hidden flex items-center justify-center">
                 {timeSeries.length === 0 ? (
                   <p className="text-xs text-zinc-600 italic">No time-series data found.</p>
                 ) : (
@@ -921,7 +921,7 @@ export default function AdminDashboardClient() {
             </div>
 
             {/* Contributions Chart */}
-            <div className="bg-zinc-950/60 border border-white/5 p-6 rounded-2xl space-y-4">
+            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg space-y-4">
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">30-Day Support Ledger</h3>
@@ -932,7 +932,7 @@ export default function AdminDashboardClient() {
                 </span>
               </div>
               
-              <div className="relative h-[220px] w-full bg-zinc-900/10 border border-white/5 rounded-xl p-2 overflow-hidden flex items-center justify-center">
+              <div className="relative h-[220px] w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 overflow-hidden flex items-center justify-center">
                 {timeSeries.length === 0 ? (
                   <p className="text-xs text-zinc-600 italic">No time-series data found.</p>
                 ) : (
@@ -989,7 +989,7 @@ export default function AdminDashboardClient() {
       <div className="space-y-4">
         
         {/* Navigation Tabs, Searches & Filters bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-950 p-3.5 border border-white/5 rounded-2xl shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-950 p-3.5 border border-zinc-800 rounded-lg ">
           
           {/* Tabs */}
           <div className="flex flex-wrap gap-1">
@@ -998,9 +998,9 @@ export default function AdminDashboardClient() {
                 key={tab}
                 onClick={() => { setActiveTab(tab); setSearchQuery(''); }}
                 className={cn(
-                  "px-4 py-2 rounded-xl text-xs font-semibold select-none cursor-pointer transition capitalize border border-transparent",
+                  "px-4 py-2 rounded-md text-xs font-semibold select-none cursor-pointer transition capitalize border border-transparent",
                   activeTab === tab 
-                    ? "bg-zinc-900 border-white/5 text-white" 
+                    ? "bg-zinc-900 border-zinc-800 text-white" 
                     : "text-zinc-500 hover:text-zinc-300"
                 )}
               >
@@ -1022,13 +1022,13 @@ export default function AdminDashboardClient() {
                 )}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 bg-zinc-900/60 border border-white/5 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary/50 transition"
+                className="w-full h-10 pl-10 pr-4 bg-zinc-900/60 border border-zinc-800 rounded-md text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary/50 transition"
               />
             </div>
 
             {/* Date range filter */}
             {activeTab !== 'inventory' && activeTab !== 'tickets' && (
-              <div className="flex items-center gap-1.5 h-10 px-3 bg-zinc-900/60 border border-white/5 rounded-xl text-xs text-zinc-400">
+              <div className="flex items-center gap-1.5 h-10 px-3 bg-zinc-900/60 border border-zinc-800 rounded-md text-xs text-zinc-400">
                 <Calendar className="h-3.5 w-3.5 text-zinc-500" />
                 <select 
                   value={dateRange} 
@@ -1044,7 +1044,7 @@ export default function AdminDashboardClient() {
 
             {/* Orders Status filter */}
             {activeTab === 'orders' && (
-              <div className="flex items-center gap-1.5 h-10 px-3 bg-zinc-900/60 border border-white/5 rounded-xl text-xs text-zinc-400">
+              <div className="flex items-center gap-1.5 h-10 px-3 bg-zinc-900/60 border border-zinc-800 rounded-md text-xs text-zinc-400">
                 <Tag className="h-3.5 w-3.5 text-zinc-500" />
                 <select 
                   value={orderStatusFilter} 
@@ -1072,8 +1072,8 @@ export default function AdminDashboardClient() {
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Sales activity block */}
-                <div className="bg-zinc-900/25 border border-white/5 p-6 rounded-2xl space-y-4">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-lg space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <ShoppingBag className="h-4.5 w-4.5 text-zinc-400" />
                       <span>Recent Sales Activity</span>
@@ -1090,7 +1090,7 @@ export default function AdminDashboardClient() {
                   {filteredOrders.length === 0 ? (
                     <p className="text-xs text-zinc-600 italic py-10 text-center">No orders matching selected filters.</p>
                   ) : (
-                    <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="divide-y divide-zinc-800 max-h-[300px] overflow-y-auto pr-1">
                       {filteredOrders.slice(0, 5).map((order) => (
                         <div 
                           key={order.id} 
@@ -1116,8 +1116,8 @@ export default function AdminDashboardClient() {
                 </div>
 
                 {/* Support Contributions block */}
-                <div className="bg-zinc-900/25 border border-white/5 p-6 rounded-2xl space-y-4">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-lg space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <HeartHandshake className="h-4.5 w-4.5 text-zinc-400" />
                       <span>Support Contributions</span>
@@ -1134,7 +1134,7 @@ export default function AdminDashboardClient() {
                   {filteredDonations.length === 0 ? (
                     <p className="text-xs text-zinc-600 italic py-10 text-center">No contributions matching selected filters.</p>
                   ) : (
-                    <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="divide-y divide-zinc-800 max-h-[300px] overflow-y-auto pr-1">
                       {filteredDonations.slice(0, 5).map((donation) => (
                         <div 
                           key={donation.id} 
@@ -1149,7 +1149,7 @@ export default function AdminDashboardClient() {
                             <p className="font-bold text-violet-400 tabular-nums">{formatCents(donation.amountCents)}</p>
                           </div>
                           {donation.comment && (
-                            <div className="p-2.5 rounded-lg bg-zinc-950 text-[10px] text-zinc-400 font-light border border-white/5 line-clamp-1 italic">
+                            <div className="p-2.5 rounded-lg bg-zinc-950 text-[10px] text-zinc-400 font-light border border-zinc-800 line-clamp-1 italic">
                               "{donation.comment}"
                             </div>
                           )}
@@ -1161,8 +1161,8 @@ export default function AdminDashboardClient() {
               </div>
 
               {/* Developer Operations Tools panel */}
-              <div className="bg-zinc-950 p-6 rounded-2xl border border-white/5 space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <div className="bg-zinc-950 p-6 rounded-lg border border-zinc-800 space-y-4">
+                <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
                   <Wrench className="h-5 w-5 text-zinc-400" />
                   <h3 className="text-sm font-bold text-white">System Testing & Simulation Suite</h3>
                 </div>
@@ -1175,21 +1175,21 @@ export default function AdminDashboardClient() {
                   <button
                     onClick={handleSimulateOrder}
                     disabled={refreshing}
-                    className="h-10 px-4 rounded-xl bg-primary hover:bg-primary/95 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                    className="h-10 px-4 rounded-md bg-primary hover:bg-primary/95 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
                   >
                     Generate Test Order
                   </button>
                   <button
                     onClick={handleSimulateDonation}
                     disabled={refreshing}
-                    className="h-10 px-4 rounded-xl bg-violet-600 hover:bg-violet-550 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                    className="h-10 px-4 rounded-md bg-violet-600 hover:bg-violet-550 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
                   >
                     Generate Test Donation
                   </button>
                   <button
                     onClick={handleResetScans}
                     disabled={refreshing}
-                    className="h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 text-xs font-semibold text-zinc-300 hover:text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                    className="h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
                   >
                     Reset Ticket Scans
                   </button>
@@ -1198,7 +1198,7 @@ export default function AdminDashboardClient() {
                   <button
                     onClick={handleStripeSync}
                     disabled={refreshing}
-                    className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-555 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                    className="h-10 px-4 rounded-md bg-emerald-600 hover:bg-emerald-555 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
                   >
                     Sync Stripe Catalog
                   </button>
@@ -1210,11 +1210,11 @@ export default function AdminDashboardClient() {
 
           {/* Tab 2: Orders Detailed Table */}
           {activeTab === 'orders' && (
-            <div className="bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden animate-in fade-in duration-200 shadow-xl">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200 ">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                    <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                       <th className="px-6 py-4">Order Identifier</th>
                       <th className="px-6 py-4">Customer Email</th>
                       <th className="px-6 py-4">Order Date</th>
@@ -1223,7 +1223,7 @@ export default function AdminDashboardClient() {
                       <th className="px-6 py-4 text-center">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                  <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                     {filteredOrders.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No matching orders found.</td>
@@ -1247,11 +1247,11 @@ export default function AdminDashboardClient() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between p-4 border-t border-white/5 bg-zinc-950/40">
+              <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
                 <button
                   disabled={ordersPage === 1}
                   onClick={() => setOrdersPage(prev => Math.max(prev - 1, 1))}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
                 >
                   Previous
                 </button>
@@ -1261,7 +1261,7 @@ export default function AdminDashboardClient() {
                 <button
                   disabled={ordersPage >= Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)}
                   onClick={() => setOrdersPage(prev => prev + 1)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
                 >
                   Next
                 </button>
@@ -1271,11 +1271,11 @@ export default function AdminDashboardClient() {
 
           {/* Tab 3: Donations Detailed Table */}
           {activeTab === 'donations' && (
-            <div className="bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden animate-in fade-in duration-200 shadow-xl">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200 ">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                    <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                       <th className="px-6 py-4">Contribution ID</th>
                       <th className="px-6 py-4">Fan Email</th>
                       <th className="px-6 py-4">Associated Event</th>
@@ -1284,7 +1284,7 @@ export default function AdminDashboardClient() {
                       <th className="px-6 py-4 text-right">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                  <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                     {filteredDonations.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No matching contributions found.</td>
@@ -1308,11 +1308,11 @@ export default function AdminDashboardClient() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between p-4 border-t border-white/5 bg-zinc-950/40">
+              <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
                 <button
                   disabled={donationsPage === 1}
                   onClick={() => setDonationsPage(prev => Math.max(prev - 1, 1))}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
                 >
                   Previous
                 </button>
@@ -1322,7 +1322,7 @@ export default function AdminDashboardClient() {
                 <button
                   disabled={donationsPage >= Math.ceil(filteredDonations.length / ITEMS_PER_PAGE)}
                   onClick={() => setDonationsPage(prev => prev + 1)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
                 >
                   Next
                 </button>
@@ -1337,18 +1337,18 @@ export default function AdminDashboardClient() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">Product Catalog</h3>
                 <button
                   onClick={() => handleOpenProductModal(null)}
-                  className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Product</span>
                 </button>
               </div>
 
-              <div className="bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden ">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-white/5 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                         <th className="px-6 py-4">SKU Identifier</th>
                         <th className="px-6 py-4">Product Title</th>
                         <th className="px-6 py-4">Inventory Type</th>
@@ -1358,7 +1358,7 @@ export default function AdminDashboardClient() {
                         <th className="px-6 py-4 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                    <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                       {filteredInventory.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="px-6 py-12 text-center text-zinc-500 italic">No matching products found.</td>
@@ -1371,7 +1371,7 @@ export default function AdminDashboardClient() {
                               <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{product.sku}</td>
                               <td className="px-6 py-4 font-semibold text-white">{product.title}</td>
                               <td className="px-6 py-4">
-                                <span className="px-2.5 py-0.5 rounded-lg bg-zinc-800 text-[10px] text-zinc-400 font-semibold border border-white/5">
+                                <span className="px-2.5 py-0.5 rounded-lg bg-zinc-800 text-[10px] text-zinc-400 font-semibold border border-zinc-800">
                                   {getProductTypeLabel(product.type)}
                                 </span>
                               </td>
@@ -1385,7 +1385,7 @@ export default function AdminDashboardClient() {
                                       <span>Low Stock</span>
                                     </span>
                                   ) : (
-                                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-zinc-950 border border-zinc-800 text-emerald-400">
                                       In Stock
                                     </span>
                                   )}
@@ -1422,11 +1422,11 @@ export default function AdminDashboardClient() {
 
           {/* Tab 5: Tickets Ledger & Scanning Overrides */}
           {activeTab === 'tickets' && (
-            <div className="bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden animate-in fade-in duration-200 shadow-xl">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200 ">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                    <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                       <th className="px-6 py-4">Ticket ID</th>
                       <th className="px-6 py-4">Event Title</th>
                       <th className="px-6 py-4">Holder Email</th>
@@ -1435,7 +1435,7 @@ export default function AdminDashboardClient() {
                       <th className="px-6 py-4 text-center">Gate Controls Override</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                  <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                     {filteredTickets.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No tickets located in database records.</td>
@@ -1450,7 +1450,7 @@ export default function AdminDashboardClient() {
                           <td className="px-6 py-4">
                             <div className="flex justify-center">
                               {ticket.isScanned ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-zinc-950 border border-zinc-800 text-emerald-400">
                                   Scanned In
                                 </span>
                               ) : (
@@ -1468,7 +1468,7 @@ export default function AdminDashboardClient() {
                                 className={cn(
                                   "px-3 py-1.5 rounded-lg text-[10px] font-bold transition active:scale-95 disabled:opacity-40 select-none cursor-pointer",
                                   ticket.isScanned 
-                                    ? "bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white"
+                                    ? "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
                                     : "bg-primary text-white hover:bg-primary/95"
                                 )}
                               >
@@ -1482,11 +1482,11 @@ export default function AdminDashboardClient() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between p-4 border-t border-white/5 bg-zinc-950/40">
+              <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
                 <button
                   disabled={ticketsPage === 1}
                   onClick={() => setTicketsPage(prev => Math.max(prev - 1, 1))}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
                 >
                   Previous
                 </button>
@@ -1496,7 +1496,7 @@ export default function AdminDashboardClient() {
                 <button
                   disabled={ticketsPage >= Math.ceil(filteredTickets.length / ITEMS_PER_PAGE)}
                   onClick={() => setTicketsPage(prev => prev + 1)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-white/5 text-[10px] text-zinc-400 hover:text-white hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
                 >
                   Next
                 </button>
@@ -1511,18 +1511,18 @@ export default function AdminDashboardClient() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">Tour Concert Events</h3>
                 <button
                   onClick={() => handleOpenEventModal(null)}
-                  className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Event</span>
                 </button>
               </div>
 
-              <div className="bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden ">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-white/5 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                         <th className="px-6 py-4">Event Date & Time</th>
                         <th className="px-6 py-4">Concert Title</th>
                         <th className="px-6 py-4">Venue</th>
@@ -1530,7 +1530,7 @@ export default function AdminDashboardClient() {
                         <th className="px-6 py-4 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                    <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                       {filteredEvents.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 italic">No tour events found.</td>
@@ -1585,18 +1585,18 @@ export default function AdminDashboardClient() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">News & Devlogs</h3>
                 <button
                   onClick={() => handleOpenNewsModal(null)}
-                  className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Post</span>
                 </button>
               </div>
 
-              <div className="bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden ">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-white/5 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                         <th className="px-6 py-4">Published Date</th>
                         <th className="px-6 py-4">Post Title</th>
                         <th className="px-6 py-4">URL Slug</th>
@@ -1604,7 +1604,7 @@ export default function AdminDashboardClient() {
                         <th className="px-6 py-4 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                    <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                       {filteredNews.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 italic">No news posts found.</td>
@@ -1673,10 +1673,10 @@ export default function AdminDashboardClient() {
           />
 
           {/* Drawer Body */}
-          <div className="relative w-full max-w-lg bg-zinc-950 border-l border-white/5 h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 z-10">
+          <div className="relative w-full max-w-lg bg-zinc-950 border-l border-zinc-800 h-full flex flex-col justify-between  animate-in slide-in-from-right duration-300 z-10">
             
             {/* Header */}
-            <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-primary uppercase tracking-widest block">Audit Detail Record</span>
                 <h2 className="text-sm font-extrabold text-white truncate max-w-[280px]">
@@ -1695,7 +1695,7 @@ export default function AdminDashboardClient() {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               
               {/* Record Summary block */}
-              <div className="bg-zinc-900/30 border border-white/5 p-4 rounded-xl space-y-3">
+              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-md space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-zinc-500">Record UUID</span>
                   <span className="font-mono text-[9px] text-zinc-400 select-all">{selectedRecord.data.id}</span>
@@ -1708,7 +1708,7 @@ export default function AdminDashboardClient() {
                   <span className="text-zinc-500">Associated Fan</span>
                   <span className="text-white font-medium truncate max-w-[200px]">{selectedRecord.data.email}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs border-t border-white/5 pt-2.5 mt-2.5">
+                <div className="flex justify-between items-center text-xs border-t border-zinc-800 pt-2.5 mt-2.5">
                   <span className="text-zinc-500">Record Status</span>
                   {selectedRecord.type === 'order' 
                     ? getStatusBadge(selectedRecord.data.status)
@@ -1727,7 +1727,7 @@ export default function AdminDashboardClient() {
               {selectedRecord.type === 'order' && (
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Store Line Items</h4>
-                  <div className="border border-white/5 rounded-xl bg-zinc-900/10 divide-y divide-white/5">
+                  <div className="border border-zinc-800 rounded-md bg-zinc-950 divide-y divide-zinc-800">
                     {selectedRecord.data.items?.length === 0 ? (
                       <p className="p-4 text-xs text-zinc-600 italic">No line item details found.</p>
                     ) : (
@@ -1752,15 +1752,15 @@ export default function AdminDashboardClient() {
               {selectedRecord.type === 'donation' && (
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Support Allocation</h4>
-                  <div className="border border-white/5 rounded-xl bg-zinc-900/10 p-4 space-y-3 text-xs">
+                  <div className="border border-zinc-800 rounded-md bg-zinc-950 p-4 space-y-3 text-xs">
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Dedicated Event</span>
                       <span className="text-white font-medium">{selectedRecord.data.eventTitle}</span>
                     </div>
                     {selectedRecord.data.comment && (
-                      <div className="space-y-1.5 border-t border-white/5 pt-3 mt-3">
+                      <div className="space-y-1.5 border-t border-zinc-800 pt-3 mt-3">
                         <span className="text-zinc-500 text-[10px] block">Comment Message</span>
-                        <div className="p-3 rounded-lg bg-zinc-950 border border-white/5 text-[10px] text-zinc-400 font-light leading-relaxed italic">
+                        <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-400 font-light leading-relaxed italic">
                           "{selectedRecord.data.comment}"
                         </div>
                       </div>
@@ -1780,7 +1780,7 @@ export default function AdminDashboardClient() {
                 </button>
 
                 {showRawJson && (
-                  <pre className="p-4 rounded-xl border border-white/5 bg-zinc-950 font-mono text-[9px] text-zinc-400 overflow-x-auto max-h-60 leading-relaxed shadow-inner">
+                  <pre className="p-4 rounded-md border border-zinc-800 bg-zinc-950 font-mono text-[9px] text-zinc-400 overflow-x-auto max-h-60 leading-relaxed shadow-inner">
                     {JSON.stringify(selectedRecord.data, null, 2)}
                   </pre>
                 )}
@@ -1789,13 +1789,13 @@ export default function AdminDashboardClient() {
             </div>
 
             {/* Quick Audit Actions */}
-            <div className="p-6 border-t border-white/5 bg-zinc-950/80 space-y-3">
+            <div className="p-6 border-t border-zinc-800 bg-zinc-950/80 space-y-3">
               <h4 className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Administrative Override Controls</h4>
               
               <div className="grid grid-cols-2 gap-3.5">
                 <button
                   onClick={() => triggerQuickAction(`Quick action 'Flag Record' triggered for UUID: ${selectedRecord.data.id}`)}
-                  className="h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white border border-white/5 transition flex items-center justify-center gap-1.5 select-none active:scale-95"
+                  className="h-10 rounded-md bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 transition flex items-center justify-center gap-1.5 select-none active:scale-95"
                 >
                   <span>Flag for Review</span>
                 </button>
@@ -1803,10 +1803,10 @@ export default function AdminDashboardClient() {
                 <button
                   onClick={() => triggerQuickAction(`Quick action 'Issue Refund' initiated for transaction ID: ${selectedRecord.data.id}`)}
                   className={cn(
-                    "h-10 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-1.5 select-none active:scale-95",
+                    "h-10 rounded-md text-xs font-semibold border transition flex items-center justify-center gap-1.5 select-none active:scale-95",
                     selectedRecord.type === 'order' 
                       ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
-                      : "bg-zinc-900 border-white/5 text-zinc-500 cursor-not-allowed"
+                      : "bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed"
                   )}
                   disabled={selectedRecord.type !== 'order'}
                 >
@@ -1822,8 +1822,8 @@ export default function AdminDashboardClient() {
       {/* Product Form Modal */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-md w-full p-6 space-y-4  animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </h3>
@@ -1840,7 +1840,7 @@ export default function AdminDashboardClient() {
                   value={productForm.title}
                   onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g. Nile Waves Vinyl Record"
-                  className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                 />
               </div>
 
@@ -1853,7 +1853,7 @@ export default function AdminDashboardClient() {
                     value={productForm.sku}
                     onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
                     placeholder="e.g. nile-vinyl-01"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1861,7 +1861,7 @@ export default function AdminDashboardClient() {
                   <select
                     value={productForm.type}
                     onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-3 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   >
                     <option value="MERCHANDISE">Merchandise</option>
                     <option value="TICKET_DIGITAL">Digital Ticket</option>
@@ -1883,7 +1883,7 @@ export default function AdminDashboardClient() {
                       setProductForm(prev => ({ ...prev, priceCents: isNaN(val) ? 0 : Math.round(val * 100) }));
                     }}
                     placeholder="e.g. 19.99"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1897,7 +1897,7 @@ export default function AdminDashboardClient() {
                       setProductForm(prev => ({ ...prev, stockQuantity: isNaN(val) ? 0 : val }));
                     }}
                     placeholder="e.g. 100"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -1909,10 +1909,10 @@ export default function AdminDashboardClient() {
                   value={productForm.imageUrl}
                   onChange={(e) => setProductForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
                   placeholder="https://... or /uploads/..."
-                  className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                 />
                 <div className="flex items-center gap-3 pt-1">
-                  <label className="h-9 px-4 inline-flex items-center rounded-xl bg-zinc-900 border border-white/5 text-[10px] font-bold uppercase tracking-wider text-zinc-300 hover:text-white hover:border-white/10 transition cursor-pointer">
+                  <label className="h-9 px-4 inline-flex items-center rounded-md bg-zinc-900 border border-zinc-800 text-[10px] font-bold uppercase tracking-wider text-zinc-300 hover:text-white hover:border-zinc-700 transition cursor-pointer">
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif"
@@ -1926,7 +1926,7 @@ export default function AdminDashboardClient() {
                     <img
                       src={productForm.imageUrl}
                       alt="Product preview"
-                      className="h-9 w-9 rounded-lg object-cover border border-white/10"
+                      className="h-9 w-9 rounded-lg object-cover border border-zinc-800"
                     />
                   )}
                 </div>
@@ -1935,7 +1935,7 @@ export default function AdminDashboardClient() {
               <div className="pt-3">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-xl font-bold text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-primary/20"
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer "
                 >
                   {editingProduct ? 'Update Product' : 'Create Product'}
                 </button>
@@ -1948,8 +1948,8 @@ export default function AdminDashboardClient() {
       {/* Event Form Modal */}
       {showEventModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-md w-full p-6 space-y-4  animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 {editingEvent ? 'Edit Tour Event' : 'Add Tour Event'}
               </h3>
@@ -1966,7 +1966,7 @@ export default function AdminDashboardClient() {
                   value={eventForm.title}
                   onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g. Cairo Polyrhythms LIVE"
-                  className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                 />
               </div>
 
@@ -1977,7 +1977,7 @@ export default function AdminDashboardClient() {
                   required
                   value={eventForm.eventDate}
                   onChange={(e) => setEventForm(prev => ({ ...prev, eventDate: e.target.value }))}
-                  className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                 />
               </div>
 
@@ -1990,7 +1990,7 @@ export default function AdminDashboardClient() {
                     value={eventForm.venueName}
                     onChange={(e) => setEventForm(prev => ({ ...prev, venueName: e.target.value }))}
                     placeholder="e.g. Pyramids Arena"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2001,7 +2001,7 @@ export default function AdminDashboardClient() {
                     value={eventForm.venueAddress}
                     onChange={(e) => setEventForm(prev => ({ ...prev, venueAddress: e.target.value }))}
                     placeholder="e.g. Nairobi, Kenya"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -2009,7 +2009,7 @@ export default function AdminDashboardClient() {
               <div className="pt-3">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-xl font-bold text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-primary/20"
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer "
                 >
                   {editingEvent ? 'Update Concert Event' : 'Create Concert Event'}
                 </button>
@@ -2022,8 +2022,8 @@ export default function AdminDashboardClient() {
       {/* News Form Modal */}
       {showNewsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-white/10 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-lg w-full p-6 space-y-4  animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 {editingNews ? 'Edit News Post' : 'Add News Post'}
               </h3>
@@ -2050,7 +2050,7 @@ export default function AdminDashboardClient() {
                       }));
                     }}
                     placeholder="e.g. Nile Waves Tour Announced"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2061,7 +2061,7 @@ export default function AdminDashboardClient() {
                     value={newsForm.slug}
                     onChange={(e) => setNewsForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
                     placeholder="e.g. tour-announced"
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -2072,7 +2072,7 @@ export default function AdminDashboardClient() {
                   <select
                     value={newsForm.type}
                     onChange={(e) => setNewsForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-3 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   >
                     <option value="NEWS">NEWS</option>
                     <option value="DEVLOG">DEVLOG</option>
@@ -2085,7 +2085,7 @@ export default function AdminDashboardClient() {
                     required
                     value={newsForm.publishedAt}
                     onChange={(e) => setNewsForm(prev => ({ ...prev, publishedAt: e.target.value }))}
-                    className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -2098,14 +2098,14 @@ export default function AdminDashboardClient() {
                   value={newsForm.bodyHtml}
                   onChange={(e) => setNewsForm(prev => ({ ...prev, bodyHtml: e.target.value }))}
                   placeholder="<p>Write news body here...</p>"
-                  className="w-full p-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none resize-none"
+                  className="w-full p-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none resize-none"
                 />
               </div>
 
               <div className="pt-3">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-xl font-bold text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-primary/20"
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer "
                 >
                   {editingNews ? 'Update News Post' : 'Create News Post'}
                 </button>
