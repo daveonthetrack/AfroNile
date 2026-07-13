@@ -59,7 +59,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
   ];
 
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl h-16 rounded-full glass-card shadow-[0_20px_50px_rgba(0,0,0,0.6)] px-6 flex items-center justify-between transition-all duration-300 hover:border-white/10 select-none">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl h-16 rounded-md bg-[#0f0a08]/90 border border-zinc-900 shadow-2xl px-6 flex items-center justify-between transition-all duration-300 hover:border-[#d95f30]/20 select-none backdrop-blur-md">
       
       {/* Brand Logo */}
       <div className="flex items-center">
@@ -87,7 +87,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
             >
               <span>{link.label}</span>
               {isActive && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary shadow-[0_0_8px_rgba(217,95,48,0.8)]" />
               )}
             </Link>
           );
@@ -97,7 +97,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
           <Link
             href="/admin"
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold bg-primary/10 border border-primary/20 text-primary transition-all hover:bg-primary/20',
+              'flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary/10 border border-primary/20 text-primary transition-all hover:bg-primary/20',
               pathname?.startsWith('/admin') ? 'ring-1 ring-primary' : ''
             )}
           >
@@ -111,7 +111,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
       <div className="hidden md:flex items-center gap-4">
         <Link
           href="/live"
-          className="h-8 px-3 flex items-center justify-center gap-2 rounded-full border border-red-500/20 bg-red-500/5 hover:bg-red-500/15 text-[10px] font-black text-red-400 hover:text-red-300 tracking-wider transition-all select-none"
+          className="h-8 px-3 flex items-center justify-center gap-2 rounded border border-red-500/20 bg-red-500/5 hover:bg-red-500/15 text-[10px] font-black text-red-400 hover:text-red-300 tracking-wider transition-all select-none"
         >
           <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -123,7 +123,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
         {/* Shopping Cart Trigger */}
         <button
           onClick={() => setIsOpen(true)}
-          className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/60 border border-white/5 hover:border-white/15 text-zinc-400 hover:text-white transition focus:outline-none"
+          className="relative flex h-8 w-8 items-center justify-center rounded bg-[#181210] border border-zinc-900 hover:border-[#d95f30]/20 text-zinc-450 hover:text-white transition focus:outline-none cursor-pointer"
           aria-label="Shopping cart"
         >
           <ShoppingCart className="h-3.5 w-3.5" />
@@ -138,7 +138,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button 
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/60 border border-white/5 hover:border-white/15 transition focus:outline-none overflow-hidden"
+                className="flex h-8 w-8 items-center justify-center rounded bg-[#181210] border border-zinc-900 hover:border-[#d95f30]/20 transition focus:outline-none overflow-hidden cursor-pointer"
                 aria-label="User menu"
               >
                 {user.avatarUrl ? (
@@ -151,19 +151,19 @@ export function NavigationBar({ user }: NavigationBarProps) {
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content
-                className="min-w-[200px] rounded-2xl border border-white/5 bg-zinc-950/80 backdrop-blur-xl p-1.5 shadow-2xl animate-in fade-in-80 slide-in-from-top-1 duration-200 z-50"
+                className="min-w-[200px] rounded-md border border-zinc-900 bg-zinc-950 p-1.5 shadow-2xl animate-in fade-in-80 slide-in-from-top-1 duration-200 z-50 text-left"
                 align="end"
                 sideOffset={10}
               >
-                <div className="px-3 py-2 border-b border-white/5 mb-1">
+                <div className="px-3 py-2 border-b border-zinc-900 mb-1">
                   <p className="text-xs font-bold text-white truncate">{user.name}</p>
-                  <p className="text-[10px] text-zinc-500 truncate mt-0.5">{user.email}</p>
+                  <p className="text-[10px] text-zinc-550 truncate mt-0.5">{user.email}</p>
                 </div>
 
                 <DropdownMenu.Item asChild>
                   <Link
                     href="/orders"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:outline-none cursor-pointer transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded text-xs text-zinc-300 hover:text-white hover:bg-zinc-900 focus:bg-zinc-900 focus:outline-none cursor-pointer transition-colors"
                   >
                     <ShoppingBag className="h-3.5 w-3.5 text-zinc-500" />
                     <span>My Orders</span>
@@ -173,7 +173,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
                 <DropdownMenu.Item asChild>
                   <Link
                     href="/tickets"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:outline-none cursor-pointer transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded text-xs text-zinc-300 hover:text-white hover:bg-zinc-900 focus:bg-zinc-900 focus:outline-none cursor-pointer transition-colors"
                   >
                     <TicketIcon className="h-3.5 w-3.5 text-zinc-500" />
                     <span>My Tickets</span>
@@ -184,7 +184,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
                   <DropdownMenu.Item asChild>
                     <Link
                       href="/admin"
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:outline-none cursor-pointer transition-colors"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded text-xs text-zinc-300 hover:text-white hover:bg-zinc-900 focus:bg-zinc-900 focus:outline-none cursor-pointer transition-colors"
                     >
                       <LayoutDashboard className="h-3.5 w-3.5 text-zinc-500" />
                       <span>Dashboard</span>
@@ -192,11 +192,11 @@ export function NavigationBar({ user }: NavigationBarProps) {
                   </DropdownMenu.Item>
                 )}
 
-                <DropdownMenu.Separator className="h-px bg-white/5 my-1" />
+                <DropdownMenu.Separator className="h-px bg-zinc-900 my-1" />
 
                 <DropdownMenu.Item 
                   onSelect={handleLogout}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:outline-none cursor-pointer transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:outline-none cursor-pointer transition-colors"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span>Sign Out</span>
@@ -207,7 +207,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
         ) : (
           <Link
             href="/login"
-            className="h-8 px-4 flex items-center justify-center rounded-full border border-white/5 hover:bg-white/5 text-xs font-semibold text-white transition-all"
+            className="h-8 px-4 flex items-center justify-center rounded border border-zinc-900 hover:bg-zinc-900/50 text-xs font-semibold text-white transition-all"
           >
             Sign In
           </Link>

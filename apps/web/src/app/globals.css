@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 240 10% 1.5%; /* Deep void black */
-    --foreground: 0 0% 98%;
+    --background: 18 20% 7%; /* Deep Burnt Espresso / Warm Clay base */
+    --foreground: 36 28% 95%; /* Muted Sand */
 
-    --card: 240 10% 4%;
-    --card-foreground: 0 0% 98%;
+    --card: 18 18% 10%; /* Dark espresso panel */
+    --card-foreground: 36 28% 95%;
 
-    --popover: 240 10% 2%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 18 20% 8%;
+    --popover-foreground: 36 28% 95%;
 
-    --primary: 38 65% 53%; /* Nile Gold */
-    --primary-foreground: 0 0% 100%;
+    --primary: 18 72% 52%; /* Terracotta Clay Orange */
+    --primary-foreground: 36 30% 98%;
 
-    --secondary: 240 4% 10%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 18 12% 13%; /* Espresso Brown */
+    --secondary-foreground: 36 28% 95%;
 
-    --muted: 240 4% 10%;
-    --muted-foreground: 240 5% 60%;
+    --muted: 18 10% 12%;
+    --muted-foreground: 36 12% 65%;
 
-    --accent: 38 65% 53%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 36 78% 70%; /* Sun-baked Peach */
+    --accent-foreground: 18 20% 7%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 8%;
-    --input: 240 5.9% 8%;
-    --ring: 38 65% 53%;
+    --border: 18 12% 16%;
+    --input: 18 12% 16%;
+    --ring: 18 72% 52%;
 
-    --radius: 1rem;
+    --radius: 0.5rem; /* 8px rounding as requested for premium product look */
   }
 }
 
@@ -44,9 +44,23 @@
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
     font-feature-settings: "rlig" 1, "calt" 1;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.02) 0px, transparent 50%);
+      radial-gradient(at 50% 10%, rgba(217, 95, 48, 0.07) 0px, transparent 60%),
+      radial-gradient(at 0% 0%, rgba(139, 69, 19, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(243, 183, 117, 0.04) 0px, transparent 50%);
     background-attachment: fixed;
+  }
+  
+  /* Organic film grain overlay for fine art texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 50;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   }
 }
 
@@ -59,12 +73,12 @@
   background: hsl(var(--background));
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(217, 95, 48, 0.2);
   border-radius: 9999px;
   transition: background 0.3s;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.4);
+  background: rgba(217, 95, 48, 0.4);
 }
 
 @layer utilities {
@@ -76,49 +90,48 @@
     scrollbar-width: none;
   }
 
-  /* Glassmorphism */
+  /* Premium Clay Surface */
   .glass-card {
-    background: rgba(10, 10, 10, 0.4);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    background: rgba(25, 20, 18, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(217, 95, 48, 0.06);
   }
 
   .glass-card-hover {
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .glass-card-hover:hover {
-    background: rgba(20, 20, 20, 0.6);
-    border-color: rgba(212, 175, 55, 0.15);
-    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 50px -10px rgba(212, 175, 55, 0.05);
+    background: rgba(30, 24, 21, 0.8);
+    border-color: rgba(243, 183, 117, 0.2);
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.9), 0 0 60px -10px rgba(217, 95, 48, 0.08);
   }
 
-  /* Ambient Gold Light */
+  /* Ambient Sunset Glow */
   .ambient-glow {
     position: absolute;
     border-radius: 9999px;
     filter: blur(140px);
     pointer-events: none;
     z-index: 0;
-    opacity: 0.15;
+    opacity: 0.2;
     mix-blend-mode: plus-lighter;
   }
 
-  /* Gold Shimmer Text */
+  /* Terracotta Shimmer Text */
   .text-gold-shimmer {
     background: linear-gradient(
       to right,
-      #9f7423 0%,
-      #e8c87c 25%,
-      #d4af37 50%,
-      #e8c87c 75%,
-      #9f7423 100%
+      #d95f30 0%,
+      #f3b775 35%,
+      #e28a47 65%,
+      #d95f30 100%
     );
     background-size: 200% auto;
     color: transparent;
     -webkit-background-clip: text;
     background-clip: text;
-    animation: goldShimmer 8s linear infinite;
+    animation: goldShimmer 10s linear infinite;
   }
 
   /* Native CSS Scroll Reveals */
@@ -127,7 +140,7 @@
       @keyframes reveal-up {
         from {
           opacity: 0;
-          transform: translateY(40px);
+          transform: translateY(30px);
         }
         to {
           opacity: 1;
@@ -142,8 +155,8 @@
 
       @keyframes scale-parallax {
         from {
-          transform: scale(0.95) translateY(20px);
-          opacity: 0.8;
+          transform: scale(0.96) translateY(15px);
+          opacity: 0.85;
         }
         to {
           transform: scale(1) translateY(0);
