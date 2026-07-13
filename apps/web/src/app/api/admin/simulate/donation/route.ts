@@ -6,22 +6,22 @@ import { getJwtSecret, isProduction } from '@/lib/env';
 export const dynamic = 'force-dynamic';
 
 const MOCK_COMMENTS = [
-  "Cairo beats are infectious! Love the new album.",
+  "Nairobi beats are infectious! Love the new album.",
   "Keep rockin' the Nile Waves! 🌊",
-  "AfroNile grooves are on another level. Peace from Alexandria!",
-  "Saw you guys at Pyramids Arena, epic show! Can't wait for the next one.",
+  "AfroNile grooves are on another level. Peace from Kampala!",
+  "Saw you guys at The Dome, epic show! Can't wait for the next one.",
   "Africa Unite is a masterpiece track! 🚀",
-  "Egypt grooving! Nile waves worldwide.",
+  "East Africa grooving! Nile waves worldwide.",
   "Support from a lifelong fan. Keep releasing awesome vinyls.",
 ];
 
 const MOCK_EMAILS = [
   "groover@nile.com",
-  "fanatic@egypt.eg",
+  "fanatic@nile.ke",
   "beatmaker@soundwaves.org",
-  "cairomusic@dance.net",
-  "afrobeat_lover@cairo.com",
-  "vinyl_collector@egypt.com",
+  "nairobi.music@dance.net",
+  "afrobeat_lover@nairobi.com",
+  "vinyl_collector@nile.com",
 ];
 
 export async function POST(req: NextRequest) {

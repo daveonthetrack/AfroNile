@@ -17,10 +17,10 @@ interface ArtistClientProps {
 const FALLBACK_CHAPTERS = [
   {
     number: '01',
-    title: 'Cairo Frequencies',
+    title: 'Nile Basin Frequencies',
     subtitle: 'The Nile Rhythm Roots',
     content:
-      'Born along the edge of the Nile, the project represents a sonic bridge between traditional Egyptian percussion patterns and the modern modular frequencies of Afrobeat. The music pulls inspiration from ancient tempos, filtering them through dynamic analog drum machines and custom Eurorack synthesizers.',
+      'Born along the edge of the Nile, the project represents a sonic bridge between traditional East African percussion patterns and the modern modular frequencies of Afrobeat. The music pulls inspiration from ancient tempos, filtering them through dynamic analog drum machines and custom Eurorack synthesizers.',
   },
   {
     number: '02',

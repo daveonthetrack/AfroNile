@@ -106,7 +106,7 @@ async function main() {
     create: {
       stageName: 'AfroNile',
       slug: 'afronile',
-      bio: 'Pioneering Egypt-infused Afrobeat grooves and global soundwaves.',
+      bio: 'Pioneering East African Afrobeat grooves and global soundwaves.',
       socialLinks: {
         spotify: 'https://open.spotify.com/artist/4X9z8e4b8rT7k9m2Q',
         instagram: 'https://instagram.com/afronile.music',
@@ -199,8 +199,8 @@ async function main() {
     data: {
       artistId: artist.id,
       title: 'Nile Waves Album Release Concert',
-      venueName: 'Pyramids Arena',
-      venueAddress: 'Giza Plateau, Cairo, Egypt',
+      venueName: 'The Dome',
+      venueAddress: 'Nairobi, Kenya',
       eventDate: new Date('2026-10-15T20:00:00Z'),
     },
   });
@@ -208,9 +208,9 @@ async function main() {
   const alexEvent = await prisma.event.create({
     data: {
       artistId: artist.id,
-      title: 'Nile Waves Live in Alexandria',
-      venueName: 'Roman Amphitheatre',
-      venueAddress: 'Alexandria, Egypt',
+      title: 'Nile Waves Live in Kampala',
+      venueName: 'National Theatre',
+      venueAddress: 'Kampala, Uganda',
       eventDate: new Date('2026-11-12T19:00:00Z'),
     },
   });
@@ -261,12 +261,12 @@ async function main() {
         `,
       },
       {
-        title: 'Behind the Sound: Recording "Ye Desta Enba" in Cairo Studios',
-        slug: 'recording-ye-desta-enba-cairo-studios',
+        title: 'Behind the Sound: Recording "Ye Desta Enba" in Nairobi',
+        slug: 'recording-ye-desta-enba-nairobi',
         type: 'blog',
         publishedAt: new Date('2026-07-02T14:15:00Z'),
         bodyHtml: `
-          <p class="mb-4 text-zinc-300">Take an inside look at how "Ye Desta Enba" was recorded in Cairo. We collaborated with traditional Egyptian multi-instrumentalists playing the Nay (flute) and Oud (lute), fusing their traditional melodies with high-tempo percussion loops.</p>
+          <p class="mb-4 text-zinc-300">Take an inside look at how "Ye Desta Enba" was recorded in Nairobi. We collaborated with traditional East African multi-instrumentalists playing the Nay (flute) and Oud (lute), fusing their traditional melodies with high-tempo percussion loops.</p>
           <p class="mb-4 text-zinc-300">Our sound engineers captured the resonance of custom copper bells to build the track's distinctive acoustic backbone. Check out the audio player on the homepage to hear the final mix!</p>
         `,
       },
@@ -277,7 +277,7 @@ async function main() {
         publishedAt: new Date('2026-07-09T09:00:00Z'),
         bodyHtml: `
           <p class="mb-4 text-zinc-300">Due to overwhelming demand from our fans, our vinyl test pressings for Nile Waves have been completed ahead of schedule by the manufacturing house.</p>
-          <p class="mb-4 text-zinc-300">Each vinyl package will be housed in a premium heavyweight gatefold cover featuring concept art of the Giza dunes at sunset. Limited editions can now be pre-ordered directly through the Official Shop tab.</p>
+          <p class="mb-4 text-zinc-300">Each vinyl package will be housed in a premium heavyweight gatefold cover featuring concept art of the Nile basin at sunset.</p>
         `,
       }
     ]

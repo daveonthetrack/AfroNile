@@ -13,7 +13,7 @@ interface CommentEntry {
 const DEFAULT_WELCOME_STORIES = [
   "Welcome to the AfroNile Experience. Scan the QR code and share your story.",
   "Deep Nile frequencies active tonight. Share your story, vibe, or concert reflection.",
-  "Egyptian rhythms, modern echoes. You are part of the sound tonight.",
+  "East African rhythms, modern echoes. You are part of the sound tonight.",
   "Keep the soundwaves flowing. Support the performance and elevate the momentum.",
   "Join the Circle of Family. We build this journey together."
 ];

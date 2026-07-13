@@ -62,7 +62,7 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
           <span>VINYL ARCHIVE</span>
         </h1>
         <p className="text-xs text-zinc-400 mt-2 font-mono uppercase tracking-widest">
-          Egypt-inspired releases • Crate Selection
+          East African inspired releases • Crate Selection
         </p>
       </div>
 

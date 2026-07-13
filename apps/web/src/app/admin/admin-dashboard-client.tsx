@@ -2000,7 +2000,7 @@ export default function AdminDashboardClient() {
                     required
                     value={eventForm.venueAddress}
                     onChange={(e) => setEventForm(prev => ({ ...prev, venueAddress: e.target.value }))}
-                    placeholder="e.g. Giza, Egypt"
+                    placeholder="e.g. Nairobi, Kenya"
                     className="w-full h-10 px-4 rounded-xl bg-zinc-900 border border-white/5 focus:border-primary text-white focus:outline-none"
                   />
                 </div>

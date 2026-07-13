@@ -234,7 +234,7 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
                   </div>
                   
                   <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-primary uppercase tracking-widest block font-mono">Egypt Infused Release</span>
+                    <span className="text-[9px] font-bold text-primary uppercase tracking-widest block font-mono">East African Inspired Release</span>
                     <h3 className="text-xl font-serif font-bold text-white tracking-wide">{album.title}</h3>
                   </div>
                 </div>
@@ -331,10 +331,10 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
             />
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
             <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 space-y-2 text-left">
-              <span className="text-[9px] font-bold text-primary uppercase tracking-widest block font-mono">Cairo Frequency Map</span>
-              <h3 className="text-xl md:text-2xl font-serif font-bold text-white tracking-wide">Cairo Waveforms</h3>
+              <span className="text-[9px] font-bold text-primary uppercase tracking-widest block font-mono">East African Frequency Map</span>
+              <h3 className="text-xl md:text-2xl font-serif font-bold text-white tracking-wide">Nile Waveforms</h3>
               <p className="text-[11px] text-zinc-400 max-w-sm font-light leading-relaxed">
-                Egypt-infused Afrobeat patterns rendered dynamically. Experience Nile Waves translated visually.
+                East African Afrobeat patterns rendered dynamically. Experience Nile Waves translated visually.
               </p>
             </div>
             
