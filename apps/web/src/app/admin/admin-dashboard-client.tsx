@@ -791,7 +791,7 @@ export default function AdminDashboardClient() {
                 )}
               >
                 <div className="flex items-center gap-2.5 overflow-hidden">
-                  <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300")} />
+                  <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-primary" : "text-zinc-500 group-hover:text-zinc-300")} />
                   {!sidebarCollapsed && <span className="text-xs truncate">{link.label}</span>}
                 </div>
                 {!sidebarCollapsed && 'count' in link && (link.count as number) > 0 && (
@@ -942,12 +942,12 @@ export default function AdminDashboardClient() {
                         {formatCents(metrics.totalRevenueCents)}
                       </h3>
                     </div>
-                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-emerald-400">
+                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-primary">
                       <DollarSign className="h-4 w-4" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-                    <TrendingUp className="h-3 w-3 text-emerald-400" />
+                    <TrendingUp className="h-3 w-3 text-primary" />
                     <span><span className="text-zinc-300 font-bold">{metrics.paidOrders}</span> transactions cleared</span>
                   </div>
                 </div>
@@ -961,12 +961,12 @@ export default function AdminDashboardClient() {
                         {formatCents(metrics.totalDonationsCents)}
                       </h3>
                     </div>
-                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-primary">
+                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-[#f3b775]">
                       <HeartHandshake className="h-4 w-4" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-                    <TrendingUp className="h-3 w-3 text-primary" />
+                    <TrendingUp className="h-3 w-3 text-[#f3b775]" />
                     <span><span className="text-zinc-300 font-bold">{metrics.totalDonationsCount}</span> contributions</span>
                   </div>
                 </div>
@@ -980,12 +980,12 @@ export default function AdminDashboardClient() {
                         {metrics.totalUsers}
                       </h3>
                     </div>
-                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-blue-400">
+                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-[#e28a47]">
                       <Users className="h-4 w-4" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-                    <ShieldCheck className="h-3 w-3 text-blue-450" />
+                    <ShieldCheck className="h-3 w-3 text-[#e28a47]" />
                     <span>Nile Fanbase index synced</span>
                   </div>
                 </div>
@@ -1011,14 +1011,14 @@ export default function AdminDashboardClient() {
                         />
                         <circle 
                           cx="22" cy="22" r="18" 
-                          strokeWidth="2.5" stroke="#f97316" 
+                          strokeWidth="2.5" stroke="#d95f30" 
                           fill="transparent"
                           strokeDasharray={2 * Math.PI * 18}
                           strokeDashoffset={(2 * Math.PI * 18) * (1 - scanRate / 100)}
                           strokeLinecap="round"
                         />
                       </svg>
-                      <Ticket className="absolute h-3 w-3 text-orange-400" />
+                      <Ticket className="absolute h-3 w-3 text-primary" />
                     </div>
                   </div>
                 </div>
@@ -1035,7 +1035,7 @@ export default function AdminDashboardClient() {
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider font-mono">Sales Ledger (30-Day)</h3>
                       <p className="text-[9px] text-zinc-500 font-mono mt-0.5">Aggregated payments cleared daily</p>
                     </div>
-                    <span className="text-[9px] font-bold text-emerald-450 px-2 py-0.5 bg-emerald-500/5 rounded border border-emerald-500/10 font-mono">
+                    <span className="text-[9px] font-bold text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 font-mono">
                       Max: {formatCents(salesChartInfo.maxVal)}
                     </span>
                   </div>
@@ -1047,8 +1047,8 @@ export default function AdminDashboardClient() {
                       <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full">
                         <defs>
                           <linearGradient id="salesAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
-                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                            <stop offset="0%" stopColor="#d95f30" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#d95f30" stopOpacity="0.0" />
                           </linearGradient>
                         </defs>
                         
@@ -1065,7 +1065,7 @@ export default function AdminDashboardClient() {
                         <path 
                           d={salesChartInfo.linePath} 
                           fill="none" 
-                          stroke="#10b981" 
+                          stroke="#d95f30" 
                           strokeWidth="2" 
                           strokeLinecap="round"
                         />
@@ -1073,7 +1073,7 @@ export default function AdminDashboardClient() {
                         {salesChartInfo.coords.map((c, i) => (
                           (i === 0 || i === salesChartInfo.coords.length - 1 || i % 5 === 0) && (
                             <g key={i}>
-                              <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#10b981" strokeWidth="1.5" />
+                              <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#d95f30" strokeWidth="1.5" />
                               <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="monospace">
                                 {timeSeries[i]?.date}
                               </text>
@@ -1092,7 +1092,7 @@ export default function AdminDashboardClient() {
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider font-mono">Donations Ledger (30-Day)</h3>
                       <p className="text-[9px] text-zinc-500 font-mono mt-0.5">Aggregated fan support values</p>
                     </div>
-                    <span className="text-[9px] font-bold text-violet-400 px-2 py-0.5 bg-violet-500/5 rounded border border-violet-500/10 font-mono">
+                    <span className="text-[9px] font-bold text-[#f3b775] px-2 py-0.5 bg-zinc-900 rounded border border-zinc-800 font-mono">
                       Max: {formatCents(donationsChartInfo.maxVal)}
                     </span>
                   </div>
@@ -1104,8 +1104,8 @@ export default function AdminDashboardClient() {
                       <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full">
                         <defs>
                           <linearGradient id="donationsAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.15" />
-                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
+                            <stop offset="0%" stopColor="#f3b775" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#f3b775" stopOpacity="0.0" />
                           </linearGradient>
                         </defs>
                         
@@ -1122,7 +1122,7 @@ export default function AdminDashboardClient() {
                         <path 
                           d={donationsChartInfo.linePath} 
                           fill="none" 
-                          stroke="#8b5cf6" 
+                          stroke="#f3b775" 
                           strokeWidth="2" 
                           strokeLinecap="round"
                         />
@@ -1130,7 +1130,7 @@ export default function AdminDashboardClient() {
                         {donationsChartInfo.coords.map((c, i) => (
                           (i === 0 || i === donationsChartInfo.coords.length - 1 || i % 5 === 0) && (
                             <g key={i}>
-                              <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#8b5cf6" strokeWidth="1.5" />
+                              <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#f3b775" strokeWidth="1.5" />
                               <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="monospace">
                                 {timeSeries[i]?.date}
                               </text>
