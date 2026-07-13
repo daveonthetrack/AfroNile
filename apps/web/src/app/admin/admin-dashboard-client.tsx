@@ -18,13 +18,17 @@ import {
   X,
   FileCode,
   Tag,
-  Clock,
   CheckCircle2,
   Wrench,
   Maximize2,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Bell,
+  ChevronDown,
+  LayoutDashboard,
+  Sliders,
+  ChevronLeft
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -90,6 +94,17 @@ interface TicketRecord {
 }
 
 export default function AdminDashboardClient() {
+  // Navigation & Layout States
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [workspace, setWorkspace] = useState<'AfroNile Studio' | 'Nile Records'>('AfroNile Studio');
+  const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifications = [
+    "New support contribution from Nairobi: $25.00",
+    "Ticket validation complete for event: Nairobi Release Concert",
+    "Inventory alert: Album Vinyl stock is below 10 units"
+  ];
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -309,14 +324,14 @@ export default function AdminDashboardClient() {
 
   const getStatusBadge = (status: RecentOrder['status']) => {
     const statusConfig = {
-      PAID: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-      PENDING: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-      FAILED: 'bg-red-500/10 border-red-500/20 text-red-400',
-      SHIPPED: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-      REFUNDED: 'bg-zinc-500/10 border-zinc-500/20 text-zinc-400',
+      PAID: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+      PENDING: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+      FAILED: 'border-red-500/20 bg-red-500/10 text-red-400',
+      SHIPPED: 'border-blue-500/20 bg-blue-500/10 text-blue-400',
+      REFUNDED: 'border-zinc-700 bg-zinc-800 text-zinc-400',
     };
     return (
-      <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border", statusConfig[status] || statusConfig.PENDING)}>
+      <span className={cn("px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase border tracking-wider", statusConfig[status] || statusConfig.PENDING)}>
         {status}
       </span>
     );
@@ -428,29 +443,31 @@ export default function AdminDashboardClient() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="h-9 w-9 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-xs text-zinc-500 animate-pulse font-medium uppercase tracking-wider">Assembling administrative system ledger...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 space-y-4">
+        <div className="h-6 w-6 border-2 border-zinc-800 border-t-zinc-400 rounded-full animate-spin" />
+        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Assembling studio work environment...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-red-500/5 border border-red-500/10 rounded-lg p-8 text-center space-y-5 backdrop-blur-md">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-red-500/10 text-red-500 border border-red-500/20">
-          <AlertTriangle className="h-7 w-7" />
+      <div className="flex items-center justify-center min-h-screen bg-zinc-950 p-4">
+        <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-lg p-6 text-center space-y-5">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10 text-red-500 border border-red-500/20">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">Operational Fault Detected</h2>
+            <p className="text-xs text-zinc-400 leading-relaxed font-light">{error}</p>
+          </div>
+          <button
+            onClick={() => fetchStats()}
+            className="h-10 w-full bg-zinc-950 border border-zinc-800 text-xs font-semibold text-white rounded-md hover:bg-zinc-850 hover:border-zinc-700 transition active:scale-98"
+          >
+            Re-Establish Terminal Link
+          </button>
         </div>
-        <div className="space-y-2">
-          <h2 className="text-lg font-bold text-white tracking-tight">Security / Loading Failure</h2>
-          <p className="text-xs text-zinc-500 leading-relaxed">{error}</p>
-        </div>
-        <button
-          onClick={() => fetchStats()}
-          className="h-11 w-full bg-zinc-900 border border-zinc-800 text-xs font-semibold text-white rounded-md hover:bg-zinc-800 transition active:scale-98"
-        >
-          Re-Authenticate & Retry
-        </button>
       </div>
     );
   }
@@ -680,429 +697,488 @@ export default function AdminDashboardClient() {
     }
   };
 
-  // Chart configuration
   const chartWidth = 600;
   const chartHeight = 220;
   const salesChartInfo = buildSvgPath(timeSeries, 'sales', chartWidth, chartHeight);
   const donationsChartInfo = buildSvgPath(timeSeries, 'donations', chartWidth, chartHeight);
 
+  const sidebarLinks = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'orders', label: 'Orders & Sales', icon: ShoppingBag, count: filteredOrders.length },
+    { id: 'donations', label: 'Fan Contributions', icon: HeartHandshake, count: filteredDonations.length },
+    { id: 'inventory', label: 'Products', icon: Sliders },
+    { id: 'tickets', label: 'Cryptographic Gates', icon: Ticket, count: filteredTickets.filter(t => !t.isScanned).length },
+    { id: 'events', label: 'Tour Events', icon: Calendar },
+    { id: 'news', label: 'Articles & Logs', icon: FileCode },
+  ] as const;
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8 py-4 px-4 sm:px-6 relative">
+    <div className="flex min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white antialiased">
       
       {/* Toast Alert Box */}
       {quickActionMsg && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-lg bg-zinc-950 border border-primary/30 text-white text-xs font-medium  animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-primary animate-bounce" />
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-md bg-zinc-900 border border-zinc-800 text-white text-xs font-mono shadow-lg animate-in fade-in slide-in-from-top-2 duration-300">
+          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
           <span>{quickActionMsg}</span>
         </div>
       )}
 
-      {/* Top Auditing Status Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-800 pb-6">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">LIVE AUDIT PIPELINE ACTIVE</span>
+      {/* Sidebar Workspace Panel */}
+      <aside 
+        className={cn(
+          "flex flex-col border-r border-zinc-900 bg-zinc-950 transition-all duration-300 shrink-0 select-none z-40",
+          sidebarCollapsed ? "w-16" : "w-64"
+        )}
+      >
+        {/* Sidebar Workspace Switcher Header */}
+        <div className="h-14 border-b border-zinc-900 flex items-center justify-between px-4 relative">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <div className="h-7 w-7 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-white">AN</span>
+            </div>
+            {!sidebarCollapsed && (
+              <button 
+                onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
+                className="flex items-center gap-1.5 text-xs font-bold text-zinc-100 hover:text-white transition"
+              >
+                <span>{workspace}</span>
+                <ChevronDown className="h-3 w-3 text-zinc-500" />
+              </button>
+            )}
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <ShieldCheck className="h-8 w-8 text-primary" />
-            <span>Operational Console</span>
-          </h1>
-          <p className="text-xs text-zinc-500 font-light max-w-xl leading-relaxed">
-            Administrative terminal for AfroNile. Review realtime customer sales logs, support contributions, and cryptographic gate scanning statuses.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleExport}
-            className="h-10 px-4 rounded-md bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-2 active:scale-95 transition select-none cursor-pointer"
+
+          {/* Collapsible trigger */}
+          <button 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="h-6 w-6 rounded-md hover:bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition border border-transparent hover:border-zinc-800"
           >
-            <Download className="h-3.5 w-3.5" />
-            <span>Export View</span>
+            {sidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
           </button>
-          
-          <a
-            href="/live/screen"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 active:scale-95 transition select-none cursor-pointer"
-          >
-            <Maximize2 className="h-3.5 w-3.5 text-zinc-400" />
-            <span>Launch Live Display</span>
-          </a>
 
-          <button
-            onClick={() => fetchStats(true)}
-            disabled={refreshing}
-            className="h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-2 active:scale-95 transition disabled:opacity-50 select-none cursor-pointer"
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-            <span>{refreshing ? 'Syncing...' : 'Sync Console'}</span>
-          </button>
+          {/* Workspace Switcher dropdown menu */}
+          {showWorkspaceMenu && !sidebarCollapsed && (
+            <div className="absolute top-12 left-4 z-50 w-52 bg-zinc-900 border border-zinc-800 rounded-md p-1 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+              <button 
+                onClick={() => { setWorkspace('AfroNile Studio'); setShowWorkspaceMenu(false); }}
+                className="w-full text-left px-3 py-2 text-xs rounded hover:bg-zinc-800 transition font-medium"
+              >
+                AfroNile Studio
+              </button>
+              <button 
+                onClick={() => { setWorkspace('Nile Records'); setShowWorkspaceMenu(false); }}
+                className="w-full text-left px-3 py-2 text-xs rounded hover:bg-zinc-800 transition font-medium"
+              >
+                Nile Records
+              </button>
+            </div>
+          )}
         </div>
-      </div>
 
-      {metrics && (
-        <>
-          {/* Main Key Metrics Summary Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Store Revenue */}
-            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
-              
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Store Sales</span>
-                  <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
-                    {formatCents(metrics.totalRevenueCents)}
-                  </h3>
-                </div>
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-800 text-emerald-400">
-                  <DollarSign className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-                <TrendingUp className="h-3 w-3 text-emerald-400" />
-                <span><span className="text-emerald-400 font-bold">{metrics.paidOrders}</span> transactions cleared</span>
-              </div>
-            </div>
-
-            {/* Support Contributions */}
-            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
-              
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Contributions</span>
-                  <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
-                    {formatCents(metrics.totalDonationsCents)}
-                  </h3>
-                </div>
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-800 text-violet-400">
-                  <HeartHandshake className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-                <TrendingUp className="h-3 w-3 text-violet-400" />
-                <span>From <span className="text-violet-400 font-bold">{metrics.totalDonationsCount}</span> fan contributions</span>
-              </div>
-            </div>
-
-            {/* Fan Database */}
-            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
-              
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Registered Fans</span>
-                  <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
-                    {metrics.totalUsers}
-                  </h3>
-                </div>
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-800 text-blue-400">
-                  <Users className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-                <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
-                <span>Fan community database active</span>
-              </div>
-            </div>
-
-            {/* Ticket scanning gauge progress */}
-            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg hover:border-zinc-700 hover:bg-zinc-950 transition-all duration-300 relative overflow-hidden group">
-              
-              
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Scan Check-ins</span>
-                  <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
-                    {scanRate}%
-                  </h3>
-                  <span className="text-[9px] text-zinc-500 font-medium block">
-                    {metrics.scannedTickets} / {metrics.totalTickets} tickets verified
-                  </span>
-                </div>
-
-                {/* SVG circular gauge */}
-                <div className="relative h-14 w-14 flex items-center justify-center shrink-0">
-                  <svg className="h-full w-full transform -rotate-90">
-                    <circle 
-                      cx="28" cy="28" r="23" 
-                      strokeWidth="3.5" stroke="rgba(255,255,255,0.03)" 
-                      fill="transparent" 
-                    />
-                    <circle 
-                      cx="28" cy="28" r="23" 
-                      strokeWidth="3.5" stroke="url(#orangeGrad)" 
-                      fill="transparent"
-                      strokeDasharray={2 * Math.PI * 23}
-                      strokeDashoffset={(2 * Math.PI * 23) * (1 - scanRate / 100)}
-                      strokeLinecap="round"
-                    />
-                    <defs>
-                      <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#f97316" />
-                        <stop offset="100%" stopColor="#fbbf24" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <Ticket className="absolute h-4.5 w-4.5 text-orange-400" />
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Time Series Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            {/* Sales Chart */}
-            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">30-Day Sales Ledger</h3>
-                  <p className="text-[10px] text-zinc-600 mt-0.5">Paid transactions aggregated daily</p>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-400 px-2 py-0.5 bg-emerald-500/5 rounded border border-emerald-500/10">
-                  Max: {formatCents(salesChartInfo.maxVal)}
-                </span>
-              </div>
-              
-              <div className="relative h-[220px] w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 overflow-hidden flex items-center justify-center">
-                {timeSeries.length === 0 ? (
-                  <p className="text-xs text-zinc-600 italic">No time-series data found.</p>
-                ) : (
-                  <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full">
-                    <defs>
-                      <linearGradient id="salesAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    
-                    {/* Area fill */}
-                    {salesChartInfo.coords.length > 0 && (
-                      <path 
-                        d={`${salesChartInfo.linePath} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`}
-                        fill="url(#salesAreaGrad)"
-                      />
-                    )}
-                    
-                    {/* Grid lines */}
-                    <line x1="0" y1={chartHeight/2} x2={chartWidth} y2={chartHeight/2} stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
-                    <line x1="0" y1={chartHeight - 1} x2={chartWidth} y2={chartHeight - 1} stroke="rgba(255,255,255,0.05)" />
-                    
-                    {/* Graph line */}
-                    <path 
-                      d={salesChartInfo.linePath} 
-                      fill="none" 
-                      stroke="#10b981" 
-                      strokeWidth="2.5" 
-                      strokeLinecap="round"
-                    />
-                    
-                    {/* Dynamic Nodes */}
-                    {salesChartInfo.coords.map((c, i) => (
-                      (i === 0 || i === salesChartInfo.coords.length - 1 || i % 5 === 0) && (
-                        <g key={i}>
-                          <circle cx={c.x} cy={c.y} r="4" fill="#000" stroke="#10b981" strokeWidth="2" />
-                          <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.25)" fontSize="9" textAnchor="middle" fontFamily="sans-serif">
-                            {timeSeries[i]?.date}
-                          </text>
-                        </g>
-                      )
-                    ))}
-                  </svg>
-                )}
-              </div>
-            </div>
-
-            {/* Contributions Chart */}
-            <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-lg space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">30-Day Support Ledger</h3>
-                  <p className="text-[10px] text-zinc-600 mt-0.5">Contributions aggregated daily</p>
-                </div>
-                <span className="text-[10px] font-bold text-violet-400 px-2 py-0.5 bg-violet-500/5 rounded border border-violet-500/10">
-                  Max: {formatCents(donationsChartInfo.maxVal)}
-                </span>
-              </div>
-              
-              <div className="relative h-[220px] w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 overflow-hidden flex items-center justify-center">
-                {timeSeries.length === 0 ? (
-                  <p className="text-xs text-zinc-600 italic">No time-series data found.</p>
-                ) : (
-                  <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full">
-                    <defs>
-                      <linearGradient id="donationsAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
-                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    
-                    {/* Area fill */}
-                    {donationsChartInfo.coords.length > 0 && (
-                      <path 
-                        d={`${donationsChartInfo.linePath} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`}
-                        fill="url(#donationsAreaGrad)"
-                      />
-                    )}
-                    
-                    {/* Grid lines */}
-                    <line x1="0" y1={chartHeight/2} x2={chartWidth} y2={chartHeight/2} stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
-                    <line x1="0" y1={chartHeight - 1} x2={chartWidth} y2={chartHeight - 1} stroke="rgba(255,255,255,0.05)" />
-                    
-                    {/* Graph line */}
-                    <path 
-                      d={donationsChartInfo.linePath} 
-                      fill="none" 
-                      stroke="#8b5cf6" 
-                      strokeWidth="2.5" 
-                      strokeLinecap="round"
-                    />
-                    
-                    {/* Dynamic Nodes */}
-                    {donationsChartInfo.coords.map((c, i) => (
-                      (i === 0 || i === donationsChartInfo.coords.length - 1 || i % 5 === 0) && (
-                        <g key={i}>
-                          <circle cx={c.x} cy={c.y} r="4" fill="#000" stroke="#8b5cf6" strokeWidth="2" />
-                          <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.25)" fontSize="9" textAnchor="middle" fontFamily="sans-serif">
-                            {timeSeries[i]?.date}
-                          </text>
-                        </g>
-                      )
-                    ))}
-                  </svg>
-                )}
-              </div>
-            </div>
-
-          </div>
-        </>
-      )}
-
-      {/* Main Ledger Content & Filters Area */}
-      <div className="space-y-4">
-        
-        {/* Navigation Tabs, Searches & Filters bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-950 p-3.5 border border-zinc-800 rounded-lg ">
-          
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-1">
-            {(['overview', 'orders', 'donations', 'inventory', 'tickets', 'events', 'news'] as const).map((tab) => (
+        {/* Sidebar Nav Links */}
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+          {sidebarLinks.map((link) => {
+            const Icon = link.icon;
+            const isActive = activeTab === link.id;
+            return (
               <button
-                key={tab}
-                onClick={() => { setActiveTab(tab); setSearchQuery(''); }}
+                key={link.id}
+                onClick={() => { setActiveTab(link.id); setSearchQuery(''); }}
                 className={cn(
-                  "px-4 py-2 rounded-md text-xs font-semibold select-none cursor-pointer transition capitalize border border-transparent",
-                  activeTab === tab 
-                    ? "bg-zinc-900 border-zinc-800 text-white" 
-                    : "text-zinc-500 hover:text-zinc-300"
+                  "w-full flex items-center justify-between px-3 py-2 rounded-md transition text-left group cursor-pointer",
+                  isActive 
+                    ? "bg-zinc-900 text-white font-semibold border border-zinc-800" 
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40 border border-transparent"
                 )}
               >
-                {tab === 'news' ? 'news' : tab}
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300")} />
+                  {!sidebarCollapsed && <span className="text-xs truncate">{link.label}</span>}
+                </div>
+                {!sidebarCollapsed && 'count' in link && (link.count as number) > 0 && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-zinc-400">
+                    {link.count}
+                  </span>
+                )}
               </button>
-            ))}
+            );
+          })}
+        </nav>
+
+        {/* Sidebar footer user profile block */}
+        <div className="p-3 border-t border-zinc-900 flex items-center gap-2.5 overflow-hidden">
+          <div className="h-8 w-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 text-zinc-400" />
+          </div>
+          {!sidebarCollapsed && (
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[11px] font-bold text-white truncate">Administrator</p>
+              <p className="text-[9px] font-mono text-zinc-500 truncate">active_gate_sync</p>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Workspace Frame container */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        
+        {/* Top Sticky Header */}
+        <header className="sticky top-0 z-30 h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-6">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+            <span className="text-zinc-500">Workspace</span>
+            <ChevronRight className="h-3 w-3 text-zinc-650" />
+            <span className="text-zinc-500">Dashboard</span>
+            <ChevronRight className="h-3 w-3 text-zinc-650" />
+            <span className="text-zinc-200 capitalize font-medium">{activeTab}</span>
           </div>
 
-          {/* Filtering selectors */}
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            
+          {/* Quick actions panel */}
+          <div className="flex items-center gap-3">
             {/* Search */}
-            <div className="relative flex-1 md:w-60 md:flex-initial">
-              <Search className="absolute left-3.5 top-3 h-3.5 w-3.5 text-zinc-600" />
+            <div className="relative w-48 sm:w-60">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-600" />
               <input
                 type="text"
                 placeholder={cn(
-                  activeTab === 'overview' ? "Search everything..." : `Filter ${activeTab}...`
+                  activeTab === 'overview' ? "Global platform filter..." : `Filter ${activeTab} records...`
                 )}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 bg-zinc-900/60 border border-zinc-800 rounded-md text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary/50 transition"
+                className="w-full h-8.5 pl-8.5 pr-3 bg-zinc-900 border border-zinc-800 rounded-md text-[11px] text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-700 transition"
               />
             </div>
 
-            {/* Date range filter */}
-            {activeTab !== 'inventory' && activeTab !== 'tickets' && (
-              <div className="flex items-center gap-1.5 h-10 px-3 bg-zinc-900/60 border border-zinc-800 rounded-md text-xs text-zinc-400">
-                <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-                <select 
-                  value={dateRange} 
-                  onChange={(e) => setDateRange(e.target.value as any)}
-                  className="bg-transparent border-none text-zinc-300 focus:outline-none text-xs cursor-pointer select-none"
-                >
-                  <option value="all" className="bg-zinc-950">All Time</option>
-                  <option value="30" className="bg-zinc-950">Last 30 Days</option>
-                  <option value="7" className="bg-zinc-950">Last 7 Days</option>
-                </select>
-              </div>
-            )}
+            {/* Sync Console */}
+            <button
+              onClick={() => fetchStats(true)}
+              disabled={refreshing}
+              title="Synchronize workspace statistics"
+              className="h-8.5 px-3 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-[11px] font-medium text-zinc-300 hover:text-white flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50 select-none cursor-pointer"
+            >
+              <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
+              <span className="hidden sm:inline">{refreshing ? 'Syncing...' : 'Sync'}</span>
+            </button>
 
-            {/* Orders Status filter */}
-            {activeTab === 'orders' && (
-              <div className="flex items-center gap-1.5 h-10 px-3 bg-zinc-900/60 border border-zinc-800 rounded-md text-xs text-zinc-400">
-                <Tag className="h-3.5 w-3.5 text-zinc-500" />
-                <select 
-                  value={orderStatusFilter} 
-                  onChange={(e) => setOrderStatusFilter(e.target.value as any)}
-                  className="bg-transparent border-none text-zinc-300 focus:outline-none text-xs cursor-pointer select-none"
-                >
-                  <option value="ALL" className="bg-zinc-950">All Statuses</option>
-                  <option value="PAID" className="bg-zinc-950">Paid</option>
-                  <option value="PENDING" className="bg-zinc-950">Pending</option>
-                  <option value="FAILED" className="bg-zinc-950">Failed</option>
-                </select>
-              </div>
-            )}
+            {/* Export */}
+            <button
+              onClick={handleExport}
+              title="Export current view to JSON"
+              className="h-8.5 px-3 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-[11px] font-medium text-zinc-300 hover:text-white flex items-center gap-1.5 transition active:scale-95 select-none cursor-pointer"
+            >
+              <Download className="h-3 w-3" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
 
+            {/* Notifications */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="h-8.5 w-8.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center text-zinc-355 hover:text-white transition cursor-pointer relative"
+              >
+                <Bell className="h-3.5 w-3.5" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 top-10 z-50 w-72 bg-zinc-900 border border-zinc-800 rounded-md p-1 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150 text-left">
+                  <div className="px-3 py-2 border-b border-zinc-800">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">System log events</p>
+                  </div>
+                  <div className="divide-y divide-zinc-800">
+                    {notifications.map((n, idx) => (
+                      <div key={idx} className="px-3 py-2.5 text-xs text-zinc-300 hover:bg-zinc-850/50">
+                        {n}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action launcher */}
+            <a
+              href="/live/screen"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Launch concert board view"
+              className="h-8.5 px-3 rounded-md bg-primary text-white hover:bg-primary/95 text-[11px] font-bold flex items-center gap-1.5 transition active:scale-95 select-none cursor-pointer"
+            >
+              <Maximize2 className="h-3 w-3" />
+              <span className="hidden sm:inline">Live Display</span>
+            </a>
           </div>
+        </header>
 
-        </div>
-
-        {/* Dynamic Lists Tab Containers */}
-        <div className="min-h-[350px]">
+        {/* Content Body Pane */}
+        <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
           
           {/* Tab 1: Overview Dashboard */}
-          {activeTab === 'overview' && (
-            <div className="space-y-8 animate-in fade-in duration-200">
+          {activeTab === 'overview' && metrics && (
+            <div className="space-y-6 animate-in fade-in duration-200">
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Sales activity block */}
-                <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-lg space-y-4">
-                  <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <ShoppingBag className="h-4.5 w-4.5 text-zinc-400" />
-                      <span>Recent Sales Activity</span>
+              {/* Top Operational status banner */}
+              <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-2.5 w-2.5 items-center justify-center relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest font-mono">LIVE CONCERT COMPANION TERMINAL ACTIVE</p>
+                    <p className="text-[11px] text-zinc-400 font-light mt-0.5">Stream connections, order checkouts, and security scanning streams are fully active.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main metrics summary row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* Store sales */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg relative overflow-hidden text-left">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Total Sales</span>
+                      <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
+                        {formatCents(metrics.totalRevenueCents)}
+                      </h3>
+                    </div>
+                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-emerald-400">
+                      <DollarSign className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
+                    <TrendingUp className="h-3 w-3 text-emerald-400" />
+                    <span><span className="text-zinc-300 font-bold">{metrics.paidOrders}</span> transactions cleared</span>
+                  </div>
+                </div>
+
+                {/* Fan support */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg relative overflow-hidden text-left">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Fan Donations</span>
+                      <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
+                        {formatCents(metrics.totalDonationsCents)}
+                      </h3>
+                    </div>
+                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-primary">
+                      <HeartHandshake className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
+                    <TrendingUp className="h-3 w-3 text-primary" />
+                    <span><span className="text-zinc-300 font-bold">{metrics.totalDonationsCount}</span> contributions</span>
+                  </div>
+                </div>
+
+                {/* Fans community */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg relative overflow-hidden text-left">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Registered Fans</span>
+                      <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
+                        {metrics.totalUsers}
+                      </h3>
+                    </div>
+                    <div className="p-2 rounded-md bg-zinc-950 border border-zinc-800 text-blue-400">
+                      <Users className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
+                    <ShieldCheck className="h-3 w-3 text-blue-450" />
+                    <span>Nile Fanbase index synced</span>
+                  </div>
+                </div>
+
+                {/* Scanner access rate */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg relative overflow-hidden text-left">
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Scan Rate</span>
+                      <h3 className="text-2xl font-bold text-white tabular-nums tracking-tight">
+                        {scanRate}%
+                      </h3>
+                      <span className="text-[9px] text-zinc-500 font-medium block">
+                        {metrics.scannedTickets} / {metrics.totalTickets} tickets verified
+                      </span>
+                    </div>
+                    <div className="relative h-11 w-11 flex items-center justify-center shrink-0">
+                      <svg className="h-full w-full transform -rotate-90">
+                        <circle 
+                          cx="22" cy="22" r="18" 
+                          strokeWidth="2.5" stroke="rgba(255,255,255,0.03)" 
+                          fill="transparent" 
+                        />
+                        <circle 
+                          cx="22" cy="22" r="18" 
+                          strokeWidth="2.5" stroke="#f97316" 
+                          fill="transparent"
+                          strokeDasharray={2 * Math.PI * 18}
+                          strokeDashoffset={(2 * Math.PI * 18) * (1 - scanRate / 100)}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <Ticket className="absolute h-3 w-3 text-orange-400" />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Time series SVG ledger charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Sales Chart */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg space-y-4 text-left">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider font-mono">Sales Ledger (30-Day)</h3>
+                      <p className="text-[9px] text-zinc-500 font-mono mt-0.5">Aggregated payments cleared daily</p>
+                    </div>
+                    <span className="text-[9px] font-bold text-emerald-450 px-2 py-0.5 bg-emerald-500/5 rounded border border-emerald-500/10 font-mono">
+                      Max: {formatCents(salesChartInfo.maxVal)}
+                    </span>
+                  </div>
+
+                  <div className="relative h-[220px] w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 overflow-hidden flex items-center justify-center">
+                    {timeSeries.length === 0 ? (
+                      <p className="text-xs text-zinc-500 italic font-mono">No time-series statistics available.</p>
+                    ) : (
+                      <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full">
+                        <defs>
+                          <linearGradient id="salesAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        
+                        {salesChartInfo.coords.length > 0 && (
+                          <path 
+                            d={`${salesChartInfo.linePath} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`}
+                            fill="url(#salesAreaGrad)"
+                          />
+                        )}
+                        
+                        <line x1="0" y1={chartHeight/2} x2={chartWidth} y2={chartHeight/2} stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                        <line x1="0" y1={chartHeight - 1} x2={chartWidth} y2={chartHeight - 1} stroke="rgba(255,255,255,0.05)" />
+                        
+                        <path 
+                          d={salesChartInfo.linePath} 
+                          fill="none" 
+                          stroke="#10b981" 
+                          strokeWidth="2" 
+                          strokeLinecap="round"
+                        />
+                        
+                        {salesChartInfo.coords.map((c, i) => (
+                          (i === 0 || i === salesChartInfo.coords.length - 1 || i % 5 === 0) && (
+                            <g key={i}>
+                              <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#10b981" strokeWidth="1.5" />
+                              <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="monospace">
+                                {timeSeries[i]?.date}
+                              </text>
+                            </g>
+                          )
+                        ))}
+                      </svg>
+                    )}
+                  </div>
+                </div>
+
+                {/* Support contributions chart */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg space-y-4 text-left">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider font-mono">Donations Ledger (30-Day)</h3>
+                      <p className="text-[9px] text-zinc-500 font-mono mt-0.5">Aggregated fan support values</p>
+                    </div>
+                    <span className="text-[9px] font-bold text-violet-400 px-2 py-0.5 bg-violet-500/5 rounded border border-violet-500/10 font-mono">
+                      Max: {formatCents(donationsChartInfo.maxVal)}
+                    </span>
+                  </div>
+
+                  <div className="relative h-[220px] w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 overflow-hidden flex items-center justify-center">
+                    {timeSeries.length === 0 ? (
+                      <p className="text-xs text-zinc-500 italic font-mono">No time-series statistics available.</p>
+                    ) : (
+                      <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full">
+                        <defs>
+                          <linearGradient id="donationsAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        
+                        {donationsChartInfo.coords.length > 0 && (
+                          <path 
+                            d={`${donationsChartInfo.linePath} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`}
+                            fill="url(#donationsAreaGrad)"
+                          />
+                        )}
+                        
+                        <line x1="0" y1={chartHeight/2} x2={chartWidth} y2={chartHeight/2} stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                        <line x1="0" y1={chartHeight - 1} x2={chartWidth} y2={chartHeight - 1} stroke="rgba(255,255,255,0.05)" />
+                        
+                        <path 
+                          d={donationsChartInfo.linePath} 
+                          fill="none" 
+                          stroke="#8b5cf6" 
+                          strokeWidth="2" 
+                          strokeLinecap="round"
+                        />
+                        
+                        {donationsChartInfo.coords.map((c, i) => (
+                          (i === 0 || i === donationsChartInfo.coords.length - 1 || i % 5 === 0) && (
+                            <g key={i}>
+                              <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#8b5cf6" strokeWidth="1.5" />
+                              <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="monospace">
+                                {timeSeries[i]?.date}
+                              </text>
+                            </g>
+                          )
+                        ))}
+                      </svg>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Two-column summary lists (Sales activity & Donations activity) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Sales block */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg space-y-4 text-left">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                      <ShoppingBag className="h-4 w-4 text-zinc-400" />
+                      <span>Recent Store activity</span>
                     </h3>
                     <button 
                       onClick={() => setActiveTab('orders')}
                       className="text-[10px] font-bold text-primary flex items-center gap-0.5 hover:underline"
                     >
-                      <span>View Table</span>
-                      <ChevronRight className="h-3 w-3" />
+                      <span>All Orders</span>
+                      <ChevronRight className="h-2.5 w-2.5" />
                     </button>
                   </div>
 
                   {filteredOrders.length === 0 ? (
-                    <p className="text-xs text-zinc-600 italic py-10 text-center">No orders matching selected filters.</p>
+                    <p className="text-xs text-zinc-500 italic py-8 text-center font-mono">No matching records.</p>
                   ) : (
-                    <div className="divide-y divide-zinc-800 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="divide-y divide-zinc-800 max-h-[260px] overflow-y-auto pr-1">
                       {filteredOrders.slice(0, 5).map((order) => (
                         <div 
                           key={order.id} 
                           onClick={() => setSelectedRecord({ type: 'order', data: order })}
-                          className="py-3 flex items-center justify-between text-xs hover:bg-white/5 cursor-pointer rounded-lg px-2 transition-all"
+                          className="py-2.5 flex items-center justify-between text-xs hover:bg-zinc-950/40 cursor-pointer rounded px-2 transition"
                         >
                           <div className="space-y-0.5">
-                            <p className="font-semibold text-white truncate max-w-[200px] sm:max-w-xs">{order.email}</p>
+                            <p className="font-semibold text-white truncate max-w-[200px]">{order.email}</p>
                             <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 font-mono">
                               <span>ID: {order.id.slice(0, 8)}...</span>
                               <span>•</span>
-                              <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{new Date(order.createdAt).toLocaleDateString()}</span>
+                              <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                             </div>
                           </div>
                           <div className="text-right space-y-1">
@@ -1115,41 +1191,41 @@ export default function AdminDashboardClient() {
                   )}
                 </div>
 
-                {/* Support Contributions block */}
-                <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-lg space-y-4">
-                  <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <HeartHandshake className="h-4.5 w-4.5 text-zinc-400" />
-                      <span>Support Contributions</span>
+                {/* Donations block */}
+                <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-lg space-y-4 text-left">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                      <HeartHandshake className="h-4 w-4 text-zinc-400" />
+                      <span>Recent Contributions</span>
                     </h3>
                     <button 
                       onClick={() => setActiveTab('donations')}
                       className="text-[10px] font-bold text-primary flex items-center gap-0.5 hover:underline"
                     >
-                      <span>View Table</span>
-                      <ChevronRight className="h-3 w-3" />
+                      <span>All Donations</span>
+                      <ChevronRight className="h-2.5 w-2.5" />
                     </button>
                   </div>
 
                   {filteredDonations.length === 0 ? (
-                    <p className="text-xs text-zinc-600 italic py-10 text-center">No contributions matching selected filters.</p>
+                    <p className="text-xs text-zinc-500 italic py-8 text-center font-mono">No matching records.</p>
                   ) : (
-                    <div className="divide-y divide-zinc-800 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="divide-y divide-zinc-800 max-h-[260px] overflow-y-auto pr-1">
                       {filteredDonations.slice(0, 5).map((donation) => (
                         <div 
                           key={donation.id} 
                           onClick={() => setSelectedRecord({ type: 'donation', data: donation })}
-                          className="py-3.5 space-y-2 hover:bg-white/5 cursor-pointer rounded-lg px-2 transition-all"
+                          className="py-2.5 space-y-1.5 hover:bg-zinc-950/40 cursor-pointer rounded px-2 transition text-xs"
                         >
-                          <div className="flex justify-between items-center text-xs">
+                          <div className="flex justify-between items-center">
                             <div>
-                              <p className="font-semibold text-white truncate max-w-[200px] sm:max-w-xs">{donation.email}</p>
-                              <p className="text-[9px] text-zinc-500 font-semibold">{donation.eventTitle}</p>
+                              <p className="font-semibold text-white truncate max-w-[200px]">{donation.email}</p>
+                              <p className="text-[9px] text-zinc-555 font-semibold">{donation.eventTitle}</p>
                             </div>
                             <p className="font-bold text-violet-400 tabular-nums">{formatCents(donation.amountCents)}</p>
                           </div>
                           {donation.comment && (
-                            <div className="p-2.5 rounded-lg bg-zinc-950 text-[10px] text-zinc-400 font-light border border-zinc-800 line-clamp-1 italic">
+                            <div className="p-2 rounded bg-zinc-950 text-[10px] text-zinc-400 border border-zinc-800 line-clamp-1 italic font-light">
                               "{donation.comment}"
                             </div>
                           )}
@@ -1158,251 +1234,313 @@ export default function AdminDashboardClient() {
                     </div>
                   )}
                 </div>
+
               </div>
 
-              {/* Developer Operations Tools panel */}
-              <div className="bg-zinc-950 p-6 rounded-lg border border-zinc-800 space-y-4">
-                <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
-                  <Wrench className="h-5 w-5 text-zinc-400" />
-                  <h3 className="text-sm font-bold text-white">System Testing & Simulation Suite</h3>
+              {/* Developer Operations Tools simulation panel */}
+              <div className="bg-zinc-900 p-5 rounded-lg border border-zinc-800 space-y-3 text-left">
+                <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+                  <Wrench className="h-4 w-4 text-zinc-400" />
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Testing & Simulation Console</h3>
                 </div>
-                <p className="text-xs text-zinc-500 max-w-2xl leading-relaxed">
-                  Use these testing buttons to generate mock purchases, support entries, or reset database scanning logs. This assists in auditing layout responsiveness and trend calculations instantly.
+                <p className="text-xs text-zinc-500 font-light max-w-xl leading-relaxed">
+                  Trigger actions below to evaluate layout updates, transaction metrics, and scan confirmations instantly in development.
                 </p>
-                <div className="flex flex-wrap gap-3 pt-2">
+                <div className="flex flex-wrap gap-2.5 pt-1">
                   {process.env.NODE_ENV !== 'production' && (
                     <>
-                  <button
-                    onClick={handleSimulateOrder}
-                    disabled={refreshing}
-                    className="h-10 px-4 rounded-md bg-primary hover:bg-primary/95 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
-                  >
-                    Generate Test Order
-                  </button>
-                  <button
-                    onClick={handleSimulateDonation}
-                    disabled={refreshing}
-                    className="h-10 px-4 rounded-md bg-violet-600 hover:bg-violet-550 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
-                  >
-                    Generate Test Donation
-                  </button>
-                  <button
-                    onClick={handleResetScans}
-                    disabled={refreshing}
-                    className="h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
-                  >
-                    Reset Ticket Scans
-                  </button>
+                      <button
+                        onClick={handleSimulateOrder}
+                        disabled={refreshing}
+                        className="h-9 px-3.5 rounded bg-primary hover:bg-primary/95 text-xs font-bold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                      >
+                        Simulate Order Payment
+                      </button>
+                      <button
+                        onClick={handleSimulateDonation}
+                        disabled={refreshing}
+                        className="h-9 px-3.5 rounded bg-violet-600 hover:bg-violet-700 text-xs font-bold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                      >
+                        Simulate Donation
+                      </button>
+                      <button
+                        onClick={handleStripeSync}
+                        disabled={refreshing}
+                        className="h-9 px-3.5 rounded bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                      >
+                        Sync Stripe Catalog
+                      </button>
+                      <button
+                        onClick={handleResetScans}
+                        disabled={refreshing}
+                        className="h-9 px-3.5 rounded bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
+                      >
+                        Reset Access Scans
+                      </button>
                     </>
                   )}
-                  <button
-                    onClick={handleStripeSync}
-                    disabled={refreshing}
-                    className="h-10 px-4 rounded-md bg-emerald-600 hover:bg-emerald-555 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-40 select-none cursor-pointer"
-                  >
-                    Sync Stripe Catalog
-                  </button>
                 </div>
               </div>
 
             </div>
           )}
 
-          {/* Tab 2: Orders Detailed Table */}
-          {activeTab === 'orders' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200 ">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
-                      <th className="px-6 py-4">Order Identifier</th>
-                      <th className="px-6 py-4">Customer Email</th>
-                      <th className="px-6 py-4">Order Date</th>
-                      <th className="px-6 py-4 text-right">Items</th>
-                      <th className="px-6 py-4 text-right">Amount</th>
-                      <th className="px-6 py-4 text-center">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
-                    {filteredOrders.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No matching orders found.</td>
-                      </tr>
-                    ) : (
-                      filteredOrders.slice((ordersPage - 1) * ITEMS_PER_PAGE, ordersPage * ITEMS_PER_PAGE).map((order) => (
-                        <tr 
-                          key={order.id} 
-                          onClick={() => setSelectedRecord({ type: 'order', data: order })}
-                          className="hover:bg-zinc-900/40 cursor-pointer transition-colors group"
-                        >
-                          <td className="px-6 py-4 font-mono text-[10px] text-zinc-500 group-hover:text-primary transition-colors">{order.id}</td>
-                          <td className="px-6 py-4 font-semibold text-white">{order.email}</td>
-                          <td className="px-6 py-4 text-zinc-400">{new Date(order.createdAt).toLocaleDateString()}</td>
-                          <td className="px-6 py-4 text-right text-zinc-400">{order.items?.length || 0} items</td>
-                          <td className="px-6 py-4 text-right font-bold text-white tabular-nums">{formatCents(order.amountCents)}</td>
-                          <td className="px-6 py-4 text-center">{getStatusBadge(order.status)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+          {/* Filter bars for paginated lists */}
+          {activeTab !== 'overview' && (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900 p-3 border border-zinc-800 rounded-lg">
+              
+              {/* Context Actions */}
+              <div className="text-left">
+                <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block font-mono">active view</span>
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono mt-0.5">{activeTab} Ledger Records</h2>
               </div>
-              <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
-                <button
-                  disabled={ordersPage === 1}
-                  onClick={() => setOrdersPage(prev => Math.max(prev - 1, 1))}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
-                >
-                  Previous
-                </button>
-                <span className="text-[10px] font-mono text-zinc-500">
-                  Page {ordersPage} of {Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE))}
-                </span>
-                <button
-                  disabled={ordersPage >= Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)}
-                  onClick={() => setOrdersPage(prev => prev + 1)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
-                >
-                  Next
-                </button>
+
+              {/* Filtering selection controls */}
+              <div className="flex flex-wrap items-center gap-3">
+                
+                {/* Advanced selector dropdowns */}
+                {activeTab !== 'inventory' && activeTab !== 'tickets' && (
+                  <div className="flex items-center gap-1.5 h-8.5 px-3 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-400">
+                    <Calendar className="h-3 w-3 text-zinc-500" />
+                    <select 
+                      value={dateRange} 
+                      onChange={(e) => setDateRange(e.target.value as any)}
+                      className="bg-transparent border-none text-zinc-300 focus:outline-none text-[11px] cursor-pointer select-none"
+                    >
+                      <option value="all" className="bg-zinc-950">All Time</option>
+                      <option value="30" className="bg-zinc-950">Last 30 Days</option>
+                      <option value="7" className="bg-zinc-950">Last 7 Days</option>
+                    </select>
+                  </div>
+                )}
+
+                {activeTab === 'orders' && (
+                  <div className="flex items-center gap-1.5 h-8.5 px-3 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-400">
+                    <Tag className="h-3 w-3 text-zinc-500" />
+                    <select 
+                      value={orderStatusFilter} 
+                      onChange={(e) => setOrderStatusFilter(e.target.value as any)}
+                      className="bg-transparent border-none text-zinc-300 focus:outline-none text-[11px] cursor-pointer select-none"
+                    >
+                      <option value="ALL" className="bg-zinc-950">All Statuses</option>
+                      <option value="PAID" className="bg-zinc-950">Paid</option>
+                      <option value="PENDING" className="bg-zinc-950">Pending</option>
+                      <option value="FAILED" className="bg-zinc-950">Failed</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Add Actions */}
+                {activeTab === 'inventory' && (
+                  <button
+                    onClick={() => handleOpenProductModal(null)}
+                    className="h-8.5 px-3 rounded bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>New Product</span>
+                  </button>
+                )}
+
+                {activeTab === 'events' && (
+                  <button
+                    onClick={() => handleOpenEventModal(null)}
+                    className="h-8.5 px-3 rounded bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>New Event</span>
+                  </button>
+                )}
+
+                {activeTab === 'news' && (
+                  <button
+                    onClick={() => handleOpenNewsModal(null)}
+                    className="h-8.5 px-3 rounded bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>New Post</span>
+                  </button>
+                )}
+
               </div>
             </div>
           )}
 
-          {/* Tab 3: Donations Detailed Table */}
-          {activeTab === 'donations' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200 ">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
-                      <th className="px-6 py-4">Contribution ID</th>
-                      <th className="px-6 py-4">Fan Email</th>
-                      <th className="px-6 py-4">Associated Event</th>
-                      <th className="px-6 py-4">Auditing Message / Comment</th>
-                      <th className="px-6 py-4">Date</th>
-                      <th className="px-6 py-4 text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
-                    {filteredDonations.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No matching contributions found.</td>
-                      </tr>
-                    ) : (
-                      filteredDonations.slice((donationsPage - 1) * ITEMS_PER_PAGE, donationsPage * ITEMS_PER_PAGE).map((donation) => (
-                        <tr 
-                          key={donation.id} 
-                          onClick={() => setSelectedRecord({ type: 'donation', data: donation })}
-                          className="hover:bg-zinc-900/40 cursor-pointer transition-colors group"
-                        >
-                          <td className="px-6 py-4 font-mono text-[10px] text-zinc-500 group-hover:text-primary transition-colors">{donation.id}</td>
-                          <td className="px-6 py-4 font-semibold text-white">{donation.email}</td>
-                          <td className="px-6 py-4 text-zinc-400">{donation.eventTitle}</td>
-                          <td className="px-6 py-4 text-zinc-400 max-w-[220px] truncate">{donation.comment || '-'}</td>
-                          <td className="px-6 py-4 text-zinc-500">{new Date(donation.createdAt).toLocaleDateString()}</td>
-                          <td className="px-6 py-4 text-right font-bold text-violet-400 tabular-nums">{formatCents(donation.amountCents)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
-                <button
-                  disabled={donationsPage === 1}
-                  onClick={() => setDonationsPage(prev => Math.max(prev - 1, 1))}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
-                >
-                  Previous
-                </button>
-                <span className="text-[10px] font-mono text-zinc-500">
-                  Page {donationsPage} of {Math.max(1, Math.ceil(filteredDonations.length / ITEMS_PER_PAGE))}
-                </span>
-                <button
-                  disabled={donationsPage >= Math.ceil(filteredDonations.length / ITEMS_PER_PAGE)}
-                  onClick={() => setDonationsPage(prev => prev + 1)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Ledger Lists Content */}
+          <div className="min-h-[300px]">
 
-          {/* Tab 4: Inventory Table */}
-          {activeTab === 'inventory' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="flex justify-between items-center mb-1 px-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Product Catalog</h3>
-                <button
-                  onClick={() => handleOpenProductModal(null)}
-                  className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Product</span>
-                </button>
-              </div>
-
-              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden ">
+            {/* Tab 2: Orders Table */}
+            {activeTab === 'orders' && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
-                        <th className="px-6 py-4">SKU Identifier</th>
-                        <th className="px-6 py-4">Product Title</th>
-                        <th className="px-6 py-4">Inventory Type</th>
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[9px] text-zinc-400 uppercase font-mono font-bold tracking-widest">
+                        <th className="px-6 py-4">Order ID</th>
+                        <th className="px-6 py-4">Customer Email</th>
+                        <th className="px-6 py-4">Order Date</th>
+                        <th className="px-6 py-4 text-right">Items</th>
+                        <th className="px-6 py-4 text-right">Amount</th>
+                        <th className="px-6 py-4 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
+                      {filteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic font-mono">No orders found matching filters.</td>
+                        </tr>
+                      ) : (
+                        filteredOrders.slice((ordersPage - 1) * ITEMS_PER_PAGE, ordersPage * ITEMS_PER_PAGE).map((order) => (
+                          <tr 
+                            key={order.id} 
+                            onClick={() => setSelectedRecord({ type: 'order', data: order })}
+                            className="hover:bg-zinc-950/40 cursor-pointer transition-colors"
+                          >
+                            <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{order.id.slice(0, 18)}...</td>
+                            <td className="px-6 py-4 font-semibold text-white">{order.email}</td>
+                            <td className="px-6 py-4 text-zinc-400">{new Date(order.createdAt).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-right text-zinc-400">{order.items?.length || 0} items</td>
+                            <td className="px-6 py-4 text-right font-bold text-white tabular-nums">{formatCents(order.amountCents)}</td>
+                            <td className="px-6 py-4 text-center">{getStatusBadge(order.status)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
+                  <button
+                    disabled={ordersPage === 1}
+                    onClick={() => setOrdersPage(prev => Math.max(prev - 1, 1))}
+                    className="h-8 px-3 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-[10px] font-mono text-zinc-500">
+                    Page {ordersPage} of {Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE))}
+                  </span>
+                  <button
+                    disabled={ordersPage >= Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)}
+                    onClick={() => setOrdersPage(prev => prev + 1)}
+                    className="h-8 px-3 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Donations Table */}
+            {activeTab === 'donations' && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[9px] text-zinc-400 uppercase font-mono font-bold tracking-widest">
+                        <th className="px-6 py-4">Contribution ID</th>
+                        <th className="px-6 py-4">Fan Email</th>
+                        <th className="px-6 py-4">Associated Event</th>
+                        <th className="px-6 py-4">Auditing Comment</th>
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
+                      {filteredDonations.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic font-mono">No matching contributions found.</td>
+                        </tr>
+                      ) : (
+                        filteredDonations.slice((donationsPage - 1) * ITEMS_PER_PAGE, donationsPage * ITEMS_PER_PAGE).map((donation) => (
+                          <tr 
+                            key={donation.id} 
+                            onClick={() => setSelectedRecord({ type: 'donation', data: donation })}
+                            className="hover:bg-zinc-950/40 cursor-pointer transition-colors"
+                          >
+                            <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{donation.id.slice(0, 18)}...</td>
+                            <td className="px-6 py-4 font-semibold text-white">{donation.email}</td>
+                            <td className="px-6 py-4 text-zinc-400">{donation.eventTitle}</td>
+                            <td className="px-6 py-4 text-zinc-400 max-w-[220px] truncate">{donation.comment || '-'}</td>
+                            <td className="px-6 py-4 text-zinc-500">{new Date(donation.createdAt).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-right font-bold text-violet-400 tabular-nums">{formatCents(donation.amountCents)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
+                  <button
+                    disabled={donationsPage === 1}
+                    onClick={() => setDonationsPage(prev => Math.max(prev - 1, 1))}
+                    className="h-8 px-3 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-[10px] font-mono text-zinc-500">
+                    Page {donationsPage} of {Math.max(1, Math.ceil(filteredDonations.length / ITEMS_PER_PAGE))}
+                  </span>
+                  <button
+                    disabled={donationsPage >= Math.ceil(filteredDonations.length / ITEMS_PER_PAGE)}
+                    onClick={() => setDonationsPage(prev => prev + 1)}
+                    className="h-8 px-3 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 4: Inventory Table */}
+            {activeTab === 'inventory' && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[9px] text-zinc-400 uppercase font-mono font-bold tracking-widest">
+                        <th className="px-6 py-4">SKU Code</th>
+                        <th className="px-6 py-4">Title</th>
+                        <th className="px-6 py-4">Type</th>
                         <th className="px-6 py-4 text-right">Price</th>
-                        <th className="px-6 py-4 text-center">In-Stock Quantity</th>
-                        <th className="px-6 py-4 text-center">Status Check</th>
-                        <th className="px-6 py-4 text-center">Actions</th>
+                        <th className="px-6 py-4 text-right">Stock Level</th>
+                        <th className="px-6 py-4 text-center">Controls</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                       {filteredInventory.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="px-6 py-12 text-center text-zinc-500 italic">No matching products found.</td>
+                          <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic font-mono">No products in inventory list.</td>
                         </tr>
                       ) : (
                         filteredInventory.map((product) => {
-                          const isLowStock = product.stockQuantity < 20;
+                          const isLowStock = product.stockQuantity < 10;
                           return (
-                            <tr key={product.id} className="hover:bg-zinc-900/40 transition-colors">
+                            <tr key={product.id} className="hover:bg-zinc-950/40 transition-colors">
                               <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{product.sku}</td>
                               <td className="px-6 py-4 font-semibold text-white">{product.title}</td>
-                              <td className="px-6 py-4">
-                                <span className="px-2.5 py-0.5 rounded-lg bg-zinc-800 text-[10px] text-zinc-400 font-semibold border border-zinc-800">
-                                  {getProductTypeLabel(product.type)}
+                              <td className="px-6 py-4 text-zinc-400">{getProductTypeLabel(product.type)}</td>
+                              <td className="px-6 py-4 text-right font-bold text-white tabular-nums">{formatCents(product.priceCents)}</td>
+                              <td className="px-6 py-4 text-right">
+                                <span className={cn(
+                                  "font-mono font-bold tabular-nums px-1.5 py-0.5 rounded text-[10px]",
+                                  isLowStock ? "bg-red-500/10 text-red-400 border border-red-500/20" : "text-zinc-400"
+                                )}>
+                                  {product.stockQuantity} units
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-right font-bold text-white tabular-nums">{formatCents(product.priceCents)}</td>
-                              <td className="px-6 py-4 text-center font-bold text-white tabular-nums">{product.stockQuantity}</td>
                               <td className="px-6 py-4">
-                                <div className="flex justify-center">
-                                  {isLowStock ? (
-                                    <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-500 shadow-sm">
-                                      <AlertTriangle className="h-3 w-3" />
-                                      <span>Low Stock</span>
-                                    </span>
-                                  ) : (
-                                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-zinc-950 border border-zinc-800 text-emerald-400">
-                                      In Stock
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex justify-center items-center gap-3">
+                                <div className="flex items-center justify-center gap-2">
                                   <button
                                     onClick={() => handleOpenProductModal(product)}
-                                    className="text-zinc-400 hover:text-white p-1 hover:bg-zinc-800 rounded transition cursor-pointer"
+                                    className="p-1 hover:bg-zinc-950 rounded text-zinc-400 hover:text-white transition cursor-pointer"
                                     title="Edit Product"
                                   >
                                     <Edit className="h-3.5 w-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteProduct(product.id)}
-                                    className="text-zinc-500 hover:text-red-400 p-1 hover:bg-red-500/10 rounded transition cursor-pointer"
+                                    className="p-1 hover:bg-zinc-950 rounded text-zinc-400 hover:text-red-400 transition cursor-pointer"
                                     title="Delete Product"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -1417,152 +1555,130 @@ export default function AdminDashboardClient() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Tab 5: Tickets Ledger & Scanning Overrides */}
-          {activeTab === 'tickets' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200 ">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
-                      <th className="px-6 py-4">Ticket ID</th>
-                      <th className="px-6 py-4">Event Title</th>
-                      <th className="px-6 py-4">Holder Email</th>
-                      <th className="px-6 py-4">QR Signature Hash</th>
-                      <th className="px-6 py-4 text-center">Scan Status</th>
-                      <th className="px-6 py-4 text-center">Gate Controls Override</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
-                    {filteredTickets.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">No tickets located in database records.</td>
-                      </tr>
-                    ) : (
-                      filteredTickets.slice((ticketsPage - 1) * ITEMS_PER_PAGE, ticketsPage * ITEMS_PER_PAGE).map((ticket) => (
-                        <tr key={ticket.id} className="hover:bg-zinc-900/40 transition-colors">
-                          <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{ticket.id.slice(0, 18)}...</td>
-                          <td className="px-6 py-4 font-semibold text-white">{ticket.eventTitle}</td>
-                          <td className="px-6 py-4 text-zinc-400">{ticket.email}</td>
-                          <td className="px-6 py-4 font-mono text-[10px] text-zinc-500 truncate max-w-[150px]">{ticket.qrCodeHash}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex justify-center">
-                              {ticket.isScanned ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-zinc-950 border border-zinc-800 text-emerald-400">
-                                  Scanned In
-                                </span>
-                              ) : (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-500">
-                                  Unscanned
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex justify-center">
-                              <button
-                                onClick={() => handleToggleTicketScan(ticket.id, ticket.isScanned)}
-                                disabled={refreshing}
-                                className={cn(
-                                  "px-3 py-1.5 rounded-lg text-[10px] font-bold transition active:scale-95 disabled:opacity-40 select-none cursor-pointer",
-                                  ticket.isScanned 
-                                    ? "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-                                    : "bg-primary text-white hover:bg-primary/95"
-                                )}
-                              >
-                                {ticket.isScanned ? 'Reset Gate Scan' : 'Force Check-In'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
-                <button
-                  disabled={ticketsPage === 1}
-                  onClick={() => setTicketsPage(prev => Math.max(prev - 1, 1))}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
-                >
-                  Previous
-                </button>
-                <span className="text-[10px] font-mono text-zinc-500">
-                  Page {ticketsPage} of {Math.max(1, Math.ceil(filteredTickets.length / ITEMS_PER_PAGE))}
-                </span>
-                <button
-                  disabled={ticketsPage >= Math.ceil(filteredTickets.length / ITEMS_PER_PAGE)}
-                  onClick={() => setTicketsPage(prev => prev + 1)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 6: Tour Events Table */}
-          {activeTab === 'events' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="flex justify-between items-center mb-1 px-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Tour Concert Events</h3>
-                <button
-                  onClick={() => handleOpenEventModal(null)}
-                  className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Event</span>
-                </button>
-              </div>
-
-              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden ">
+            {/* Tab 5: Tickets Scanning Table */}
+            {activeTab === 'tickets' && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden animate-in fade-in duration-200">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
-                        <th className="px-6 py-4">Event Date & Time</th>
-                        <th className="px-6 py-4">Concert Title</th>
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[9px] text-zinc-400 uppercase font-mono font-bold tracking-widest">
+                        <th className="px-6 py-4">Ticket ID</th>
+                        <th className="px-6 py-4">Event Title</th>
+                        <th className="px-6 py-4">Holder Email</th>
+                        <th className="px-6 py-4">QR Hash</th>
+                        <th className="px-6 py-4 text-center">Scan Status</th>
+                        <th className="px-6 py-4 text-center">Gate Controls</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
+                      {filteredTickets.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic font-mono">No tickets in database registry.</td>
+                        </tr>
+                      ) : (
+                        filteredTickets.slice((ticketsPage - 1) * ITEMS_PER_PAGE, ticketsPage * ITEMS_PER_PAGE).map((ticket) => (
+                          <tr key={ticket.id} className="hover:bg-zinc-950/40 transition-colors">
+                            <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{ticket.id.slice(0, 18)}...</td>
+                            <td className="px-6 py-4 font-semibold text-white">{ticket.eventTitle}</td>
+                            <td className="px-6 py-4 text-zinc-400">{ticket.email}</td>
+                            <td className="px-6 py-4 font-mono text-[10px] text-zinc-500 truncate max-w-[150px]">{ticket.qrCodeHash}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-center">
+                                {ticket.isScanned ? (
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 uppercase font-mono tracking-wider">
+                                    Validated
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase font-mono tracking-wider">
+                                    Unscanned
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-center">
+                                <button
+                                  onClick={() => handleToggleTicketScan(ticket.id, ticket.isScanned)}
+                                  disabled={refreshing}
+                                  className={cn(
+                                    "px-3 py-1.5 rounded-md text-[10px] font-mono font-bold transition active:scale-95 disabled:opacity-40 select-none cursor-pointer",
+                                    ticket.isScanned 
+                                      ? "bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white"
+                                      : "bg-primary text-white hover:bg-primary/95"
+                                  )}
+                                >
+                                  {ticket.isScanned ? 'Reset Scan' : 'Force Check-In'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                <div className="flex items-center justify-between p-4 border-t border-zinc-800 bg-zinc-950/40">
+                  <button
+                    disabled={ticketsPage === 1}
+                    onClick={() => setTicketsPage(prev => Math.max(prev - 1, 1))}
+                    className="h-8 px-3 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-[10px] font-mono text-zinc-500">
+                    Page {ticketsPage} of {Math.max(1, Math.ceil(filteredTickets.length / ITEMS_PER_PAGE))}
+                  </span>
+                  <button
+                    disabled={ticketsPage >= Math.ceil(filteredTickets.length / ITEMS_PER_PAGE)}
+                    onClick={() => setTicketsPage(prev => prev + 1)}
+                    className="h-8 px-3 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed select-none transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 6: Tour Events Table */}
+            {activeTab === 'events' && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[9px] text-zinc-400 uppercase font-mono font-bold tracking-widest">
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4">Event Title</th>
                         <th className="px-6 py-4">Venue</th>
-                        <th className="px-6 py-4">Address Location</th>
-                        <th className="px-6 py-4 text-center">Actions</th>
+                        <th className="px-6 py-4">Location</th>
+                        <th className="px-6 py-4 text-center">Controls</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                       {filteredEvents.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 italic">No tour events found.</td>
+                          <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 italic font-mono">No tour events scheduled.</td>
                         </tr>
                       ) : (
                         filteredEvents.map((event) => (
-                          <tr key={event.id} className="hover:bg-zinc-900/40 transition-colors">
-                            <td className="px-6 py-4 font-mono text-[11px] text-primary font-bold">
-                              {new Date(event.eventDate).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </td>
+                          <tr key={event.id} className="hover:bg-zinc-950/40 transition-colors">
+                            <td className="px-6 py-4 text-zinc-400 font-mono">{new Date(event.eventDate).toLocaleDateString()}</td>
                             <td className="px-6 py-4 font-semibold text-white">{event.title}</td>
                             <td className="px-6 py-4 text-zinc-400">{event.venueName}</td>
                             <td className="px-6 py-4 text-zinc-500">{event.venueAddress}</td>
                             <td className="px-6 py-4">
-                              <div className="flex justify-center items-center gap-3">
+                              <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={() => handleOpenEventModal(event)}
-                                  className="text-zinc-400 hover:text-white p-1 hover:bg-zinc-800 rounded transition cursor-pointer"
-                                  title="Edit Event"
+                                  className="p-1 hover:bg-zinc-950 rounded text-zinc-400 hover:text-white transition cursor-pointer"
                                 >
                                   <Edit className="h-3.5 w-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteEvent(event.id)}
-                                  className="text-zinc-500 hover:text-red-400 p-1 hover:bg-red-500/10 rounded transition cursor-pointer"
-                                  title="Delete Event"
+                                  className="p-1 hover:bg-zinc-950 rounded text-zinc-400 hover:text-red-400 transition cursor-pointer"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </button>
@@ -1575,75 +1691,49 @@ export default function AdminDashboardClient() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Tab 7: News & Devlogs Table */}
-          {activeTab === 'news' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="flex justify-between items-center mb-1 px-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">News & Devlogs</h3>
-                <button
-                  onClick={() => handleOpenNewsModal(null)}
-                  className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/95 text-[11px] font-bold text-white transition active:scale-95 flex items-center gap-1.5 select-none cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Post</span>
-                </button>
-              </div>
-
-              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden ">
+            {/* Tab 7: News and logs Table */}
+            {activeTab === 'news' && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
-                        <th className="px-6 py-4">Published Date</th>
-                        <th className="px-6 py-4">Post Title</th>
-                        <th className="px-6 py-4">URL Slug</th>
-                        <th className="px-6 py-4">Type Check</th>
-                        <th className="px-6 py-4 text-center">Actions</th>
+                      <tr className="border-b border-zinc-800 bg-zinc-950 text-[9px] text-zinc-400 uppercase font-mono font-bold tracking-widest">
+                        <th className="px-6 py-4">Publish Date</th>
+                        <th className="px-6 py-4">Title</th>
+                        <th className="px-6 py-4">Slug Identifier</th>
+                        <th className="px-6 py-4 text-center">Type</th>
+                        <th className="px-6 py-4 text-center">Controls</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800 text-xs text-zinc-300">
                       {filteredNews.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 italic">No news posts found.</td>
+                          <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 italic font-mono">No news articles found.</td>
                         </tr>
                       ) : (
                         filteredNews.map((post) => (
-                          <tr key={post.id} className="hover:bg-zinc-900/40 transition-colors">
-                            <td className="px-6 py-4 text-zinc-500">
-                              {new Date(post.publishedAt).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </td>
+                          <tr key={post.id} className="hover:bg-zinc-950/40 transition-colors">
+                            <td className="px-6 py-4 text-zinc-400 font-mono">{new Date(post.publishedAt).toLocaleDateString()}</td>
                             <td className="px-6 py-4 font-semibold text-white">{post.title}</td>
-                            <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">/{post.slug}</td>
-                            <td className="px-6 py-4">
-                              <span className={cn(
-                                "px-2.5 py-0.5 rounded-lg text-[9px] font-bold border",
-                                post.type === 'DEVLOG'
-                                  ? "bg-violet-500/10 border-violet-500/20 text-violet-400"
-                                  : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                              )}>
+                            <td className="px-6 py-4 text-zinc-500 font-mono text-[11px]">{post.slug}</td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="px-1.5 py-0.5 rounded bg-zinc-950 text-[10px] font-mono border border-zinc-800 text-zinc-400">
                                 {post.type}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <div className="flex justify-center items-center gap-3">
+                              <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={() => handleOpenNewsModal(post)}
-                                  className="text-zinc-400 hover:text-white p-1 hover:bg-zinc-800 rounded transition cursor-pointer"
-                                  title="Edit Post"
+                                  className="p-1 hover:bg-zinc-950 rounded text-zinc-400 hover:text-white transition cursor-pointer"
                                 >
                                   <Edit className="h-3.5 w-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteNews(post.id)}
-                                  className="text-zinc-500 hover:text-red-400 p-1 hover:bg-red-500/10 rounded transition cursor-pointer"
-                                  title="Delete Post"
+                                  className="p-1 hover:bg-zinc-950 rounded text-zinc-400 hover:text-red-400 transition cursor-pointer"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </button>
@@ -1656,286 +1746,248 @@ export default function AdminDashboardClient() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-        </div>
+          </div>
+
+        </main>
 
       </div>
 
-      {/* Slide-over Audit Detail Drawer */}
+      {/* Record details slide drawer */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
-          {/* Backdrop */}
-          <div 
-            onClick={() => { setSelectedRecord(null); setShowRawJson(false); }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-          />
-
-          {/* Drawer Body */}
-          <div className="relative w-full max-w-lg bg-zinc-950 border-l border-zinc-800 h-full flex flex-col justify-between  animate-in slide-in-from-right duration-300 z-10">
-            
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
-              <div className="space-y-1">
-                <span className="text-[9px] font-bold text-primary uppercase tracking-widest block">Audit Detail Record</span>
-                <h2 className="text-sm font-extrabold text-white truncate max-w-[280px]">
-                  {selectedRecord.type === 'order' ? `Order Record` : `Contribution Record`}
-                </h2>
-              </div>
-              <button 
-                onClick={() => { setSelectedRecord(null); setShowRawJson(false); }}
-                className="p-2 hover:bg-white/5 rounded-lg text-zinc-500 hover:text-white transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Content body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
+          <div className="h-full w-full max-w-lg bg-zinc-950 border-l border-zinc-900 p-6 flex flex-col justify-between space-y-6 shadow-2xl animate-in slide-in-from-right duration-300 text-left">
+            <div className="space-y-6">
               
-              {/* Record Summary block */}
-              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-md space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500">Record UUID</span>
-                  <span className="font-mono text-[9px] text-zinc-400 select-all">{selectedRecord.data.id}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500">Audited Timestamp</span>
-                  <span className="text-zinc-300">{new Date(selectedRecord.data.createdAt).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500">Associated Fan</span>
-                  <span className="text-white font-medium truncate max-w-[200px]">{selectedRecord.data.email}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs border-t border-zinc-800 pt-2.5 mt-2.5">
-                  <span className="text-zinc-500">Record Status</span>
-                  {selectedRecord.type === 'order' 
-                    ? getStatusBadge(selectedRecord.data.status)
-                    : <span className="px-2 py-0.5 border border-violet-500/20 bg-violet-500/10 text-violet-400 rounded-full text-[9px] font-bold uppercase tracking-wider">Cleared</span>
-                  }
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500">Aggregate Amount</span>
-                  <span className={cn("text-sm font-bold tabular-nums", selectedRecord.type === 'order' ? 'text-white' : 'text-violet-400')}>
-                    {formatCents(selectedRecord.data.amountCents)}
+              {/* Drawer header */}
+              <div className="flex justify-between items-start border-b border-zinc-900 pb-4">
+                <div>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest block font-mono">
+                    {selectedRecord.type} detail profile
                   </span>
+                  <h2 className="text-sm font-bold text-white font-mono mt-1 select-all">
+                    {selectedRecord.data.id}
+                  </h2>
                 </div>
+                <button 
+                  onClick={() => { setSelectedRecord(null); setShowRawJson(false); }}
+                  className="p-1.5 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-md text-zinc-400 hover:text-white transition cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
 
-              {/* Order Specific: Line Items */}
-              {selectedRecord.type === 'order' && (
-                <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Store Line Items</h4>
-                  <div className="border border-zinc-800 rounded-md bg-zinc-950 divide-y divide-zinc-800">
-                    {selectedRecord.data.items?.length === 0 ? (
-                      <p className="p-4 text-xs text-zinc-600 italic">No line item details found.</p>
-                    ) : (
-                      selectedRecord.data.items?.map((item: any, idx: number) => (
-                        <div key={idx} className="p-3.5 flex justify-between items-start text-xs">
-                          <div className="space-y-1 min-w-0 pr-4">
-                            <p className="font-semibold text-white truncate max-w-[240px]">{item.productTitle}</p>
-                            <p className="text-[9px] text-zinc-500 font-mono">SKU: {item.sku}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-white font-medium">Qty {item.quantity}</p>
-                            <p className="text-[10px] text-zinc-400 font-bold tabular-nums mt-0.5">{formatCents(item.priceCents * item.quantity)}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Donation Specific: Comments */}
-              {selectedRecord.type === 'donation' && (
-                <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Support Allocation</h4>
-                  <div className="border border-zinc-800 rounded-md bg-zinc-950 p-4 space-y-3 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Dedicated Event</span>
-                      <span className="text-white font-medium">{selectedRecord.data.eventTitle}</span>
-                    </div>
-                    {selectedRecord.data.comment && (
-                      <div className="space-y-1.5 border-t border-zinc-800 pt-3 mt-3">
-                        <span className="text-zinc-500 text-[10px] block">Comment Message</span>
-                        <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-400 font-light leading-relaxed italic">
-                          "{selectedRecord.data.comment}"
-                        </div>
+              {/* Drawer Details content */}
+              <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-1">
+                {selectedRecord.type === 'order' && (
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Account Holder</span>
+                        <p className="text-xs text-white font-semibold">{selectedRecord.data.email}</p>
                       </div>
-                    )}
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Status</span>
+                        <div>{getStatusBadge(selectedRecord.data.status)}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Paid Value</span>
+                        <p className="text-xs text-white font-bold">{formatCents(selectedRecord.data.amountCents)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono">Timestamp</span>
+                        <p className="text-xs text-zinc-300 font-mono">{new Date(selectedRecord.data.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 border border-zinc-900 bg-zinc-900/10 p-4 rounded-md">
+                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">Basket Items</h4>
+                      <div className="border border-zinc-900 rounded-md bg-zinc-950 divide-y divide-zinc-900">
+                        {selectedRecord.data.items?.map((item: any, idx: number) => (
+                          <div key={idx} className="p-3 flex justify-between items-center text-xs">
+                            <div>
+                              <p className="font-semibold text-white">{item.productTitle}</p>
+                              <p className="text-[9px] text-zinc-500 font-mono mt-0.5">SKU: {item.sku}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-zinc-350">{item.quantity}x</p>
+                              <p className="text-[9px] text-zinc-500 font-mono mt-0.5">{formatCents(item.priceCents)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Raw JSON Audit Log Toggle */}
-              <div className="space-y-3.5">
-                <button
-                  onClick={() => setShowRawJson(!showRawJson)}
-                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition select-none cursor-pointer"
-                >
-                  <FileCode className="h-4 w-4" />
-                  <span>{showRawJson ? 'Hide Database Audit Log' : 'Reveal Database Audit Log'}</span>
-                </button>
+                {selectedRecord.type === 'donation' && (
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider block font-mono">Fan Email</span>
+                        <p className="text-xs text-white font-semibold">{selectedRecord.data.email}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider block font-mono">Value</span>
+                        <p className="text-xs text-violet-400 font-bold">{formatCents(selectedRecord.data.amountCents)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider block font-mono">Concert Show</span>
+                        <p className="text-xs text-zinc-300 font-semibold">{selectedRecord.data.eventTitle}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider block font-mono">Timestamp</span>
+                        <p className="text-xs text-zinc-400 font-mono">{new Date(selectedRecord.data.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
 
+                    <div className="border border-zinc-900 rounded-md bg-zinc-950 p-4 space-y-2 text-xs">
+                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">Fan Message</h4>
+                      <p className="text-zinc-300 font-light italic leading-relaxed">
+                        "{selectedRecord.data.comment || 'No comment provided by donor.'}"
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Raw JSON viewer */}
                 {showRawJson && (
-                  <pre className="p-4 rounded-md border border-zinc-800 bg-zinc-950 font-mono text-[9px] text-zinc-400 overflow-x-auto max-h-60 leading-relaxed shadow-inner">
-                    {JSON.stringify(selectedRecord.data, null, 2)}
-                  </pre>
+                  <div className="space-y-2 animate-in fade-in duration-200">
+                    <span className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider block font-mono">Raw data payload</span>
+                    <pre className="p-4 rounded-md border border-zinc-900 bg-zinc-950 font-mono text-[9px] text-zinc-450 overflow-x-auto max-h-60 leading-relaxed shadow-inner">
+                      {JSON.stringify(selectedRecord.data, null, 2)}
+                    </pre>
+                  </div>
                 )}
               </div>
-
             </div>
 
-            {/* Quick Audit Actions */}
-            <div className="p-6 border-t border-zinc-800 bg-zinc-950/80 space-y-3">
-              <h4 className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Administrative Override Controls</h4>
-              
-              <div className="grid grid-cols-2 gap-3.5">
-                <button
-                  onClick={() => triggerQuickAction(`Quick action 'Flag Record' triggered for UUID: ${selectedRecord.data.id}`)}
-                  className="h-10 rounded-md bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 transition flex items-center justify-center gap-1.5 select-none active:scale-95"
-                >
-                  <span>Flag for Review</span>
-                </button>
-
-                <button
-                  onClick={() => triggerQuickAction(`Quick action 'Issue Refund' initiated for transaction ID: ${selectedRecord.data.id}`)}
-                  className={cn(
-                    "h-10 rounded-md text-xs font-semibold border transition flex items-center justify-center gap-1.5 select-none active:scale-95",
-                    selectedRecord.type === 'order' 
-                      ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
-                      : "bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed"
-                  )}
-                  disabled={selectedRecord.type !== 'order'}
-                >
-                  <span>Refund Transaction</span>
-                </button>
-              </div>
+            {/* Drawer footer buttons */}
+            <div className="pt-4 border-t border-zinc-900 flex gap-3">
+              <button
+                onClick={() => setShowRawJson(!showRawJson)}
+                className="h-10 rounded-md bg-zinc-900 hover:bg-zinc-855 text-xs font-semibold text-zinc-400 hover:text-white border border-zinc-800 transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1"
+              >
+                <span>{showRawJson ? 'Hide Payload' : 'Show Payload'}</span>
+              </button>
+              <button
+                onClick={() => { setSelectedRecord(null); setShowRawJson(false); }}
+                className="h-10 rounded-md text-xs font-semibold border transition flex items-center justify-center gap-1.5 select-none active:scale-95 cursor-pointer flex-1 bg-zinc-900 border-zinc-800 text-zinc-455 hover:bg-zinc-855 hover:text-white"
+              >
+                Close View
+              </button>
             </div>
 
           </div>
         </div>
       )}
 
-      {/* Product Form Modal */}
+      {/* Product Submission Form Modal */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-md w-full p-6 space-y-4  animate-in zoom-in-95 duration-200">
+          <div className="bg-zinc-950 border border-zinc-900 rounded-lg max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-200 text-left">
             <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                {editingProduct ? 'Edit Product Item' : 'Create Product Item'}
               </h3>
-              <button onClick={() => setShowProductModal(false)} className="text-zinc-500 hover:text-white transition cursor-pointer">
+              <button 
+                onClick={() => setShowProductModal(false)}
+                className="p-1 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-md text-zinc-400 hover:text-white transition cursor-pointer"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <form onSubmit={handleProductSubmit} className="space-y-4 text-xs font-mono text-left">
+
+            <form onSubmit={handleProductSubmit} className="space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Product Title</label>
+                <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Product Title</label>
                 <input
                   type="text"
                   required
                   value={productForm.title}
                   onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. Nile Waves Vinyl Record"
-                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                  placeholder="e.g. Nile Waves Vinyl Gatefold"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">SKU (Unique)</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">SKU Code</label>
                   <input
                     type="text"
                     required
+                    disabled={!!editingProduct}
                     value={productForm.sku}
                     onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
-                    placeholder="e.g. nile-vinyl-01"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-mono"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Type</label>
-                  <select
-                    value={productForm.type}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
-                  >
-                    <option value="MERCHANDISE">Merchandise</option>
-                    <option value="TICKET_DIGITAL">Digital Ticket</option>
-                    <option value="VIP_EXPERIENCE">VIP Experience</option>
-                  </select>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Price (Cents)</label>
+                  <input
+                    type="number"
+                    required
+                    value={productForm.priceCents}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, priceCents: parseInt(e.target.value) || 0 }))}
+                    className="w-full h-10 px-3 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none font-mono"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Price (USD)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={(productForm.priceCents / 100).toString()}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      setProductForm(prev => ({ ...prev, priceCents: isNaN(val) ? 0 : Math.round(val * 100) }));
-                    }}
-                    placeholder="e.g. 19.99"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Stock Quantity</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Stock Quantity</label>
                   <input
                     type="number"
                     required
                     value={productForm.stockQuantity}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value);
-                      setProductForm(prev => ({ ...prev, stockQuantity: isNaN(val) ? 0 : val }));
-                    }}
-                    placeholder="e.g. 100"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    onChange={(e) => setProductForm(prev => ({ ...prev, stockQuantity: parseInt(e.target.value) || 0 }))}
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none font-mono"
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Catalog Type</label>
+                  <select
+                    value={productForm.type}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value as any }))}
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none cursor-pointer"
+                  >
+                    <option value="MERCHANDISE">MERCHANDISE</option>
+                    <option value="TICKET_DIGITAL">TICKET_DIGITAL</option>
+                    <option value="VIP_EXPERIENCE">VIP_EXPERIENCE</option>
+                  </select>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Image URL</label>
-                <input
-                  type="url"
-                  value={productForm.imageUrl}
-                  onChange={(e) => setProductForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                  placeholder="https://... or /uploads/..."
-                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
-                />
-                <div className="flex items-center gap-3 pt-1">
-                  <label className="h-9 px-4 inline-flex items-center rounded-md bg-zinc-900 border border-zinc-800 text-[10px] font-bold uppercase tracking-wider text-zinc-300 hover:text-white hover:border-zinc-700 transition cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      className="hidden"
-                      disabled={uploadingImage}
+                <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Product Image Link</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={productForm.imageUrl}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                    placeholder="https://..."
+                    className="flex-1 h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
+                  />
+                  <label className="h-10 px-4 inline-flex items-center rounded-md bg-zinc-900 border border-zinc-800 text-[10px] font-bold uppercase tracking-wider text-zinc-300 hover:text-white hover:border-zinc-700 transition cursor-pointer select-none">
+                    {uploadingImage ? 'Uploading...' : 'Browse'}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
                       onChange={handleProductImageUpload}
+                      disabled={uploadingImage}
+                      className="hidden" 
                     />
-                    {uploadingImage ? 'Uploading...' : 'Upload Image'}
                   </label>
-                  {productForm.imageUrl && (
-                    <img
-                      src={productForm.imageUrl}
-                      alt="Product preview"
-                      className="h-9 w-9 rounded-lg object-cover border border-zinc-800"
-                    />
-                  )}
                 </div>
               </div>
 
               <div className="pt-3">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer "
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer"
                 >
                   {editingProduct ? 'Update Product' : 'Create Product'}
                 </button>
@@ -1945,63 +1997,67 @@ export default function AdminDashboardClient() {
         </div>
       )}
 
-      {/* Event Form Modal */}
+      {/* Tour Event Form Modal */}
       {showEventModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-md w-full p-6 space-y-4  animate-in zoom-in-95 duration-200">
+          <div className="bg-zinc-950 border border-zinc-900 rounded-lg max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-200 text-left">
             <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
                 {editingEvent ? 'Edit Tour Event' : 'Add Tour Event'}
               </h3>
-              <button onClick={() => setShowEventModal(false)} className="text-zinc-500 hover:text-white transition cursor-pointer">
+              <button 
+                onClick={() => setShowEventModal(false)}
+                className="p-1 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-md text-zinc-400 hover:text-white transition cursor-pointer"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <form onSubmit={handleEventSubmit} className="space-y-4 text-xs font-mono text-left">
+
+            <form onSubmit={handleEventSubmit} className="space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Concert Title</label>
+                <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Event Title</label>
                 <input
                   type="text"
                   required
                   value={eventForm.title}
                   onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. Cairo Polyrhythms LIVE"
-                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                  placeholder="e.g. Nile Waves LIVE"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Event Date & Time</label>
+                <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Date & Time</label>
                 <input
                   type="datetime-local"
                   required
                   value={eventForm.eventDate}
                   onChange={(e) => setEventForm(prev => ({ ...prev, eventDate: e.target.value }))}
-                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                  className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Venue Name</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Venue Name</label>
                   <input
                     type="text"
                     required
                     value={eventForm.venueName}
                     onChange={(e) => setEventForm(prev => ({ ...prev, venueName: e.target.value }))}
-                    placeholder="e.g. Pyramids Arena"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    placeholder="e.g. The Dome"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Address / City</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Address / City</label>
                   <input
                     type="text"
                     required
                     value={eventForm.venueAddress}
                     onChange={(e) => setEventForm(prev => ({ ...prev, venueAddress: e.target.value }))}
                     placeholder="e.g. Nairobi, Kenya"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -2009,7 +2065,7 @@ export default function AdminDashboardClient() {
               <div className="pt-3">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer "
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer"
                 >
                   {editingEvent ? 'Update Concert Event' : 'Create Concert Event'}
                 </button>
@@ -2019,93 +2075,92 @@ export default function AdminDashboardClient() {
         </div>
       )}
 
-      {/* News Form Modal */}
+      {/* News Article Form Modal */}
       {showNewsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-lg w-full p-6 space-y-4  animate-in zoom-in-95 duration-200">
+          <div className="bg-zinc-950 border border-zinc-900 rounded-lg max-w-lg w-full p-6 space-y-4 animate-in zoom-in-95 duration-200 text-left">
             <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
                 {editingNews ? 'Edit News Post' : 'Add News Post'}
               </h3>
-              <button onClick={() => setShowNewsModal(false)} className="text-zinc-500 hover:text-white transition cursor-pointer">
+              <button 
+                onClick={() => setShowNewsModal(false)}
+                className="p-1 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-md text-zinc-400 hover:text-white transition cursor-pointer"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <form onSubmit={handleNewsSubmit} className="space-y-4 text-xs font-mono text-left">
+
+            <form onSubmit={handleNewsSubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Post Title</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Article Title</label>
                   <input
                     type="text"
                     required
                     value={newsForm.title}
                     onChange={(e) => {
-                      const titleVal = e.target.value;
                       setNewsForm(prev => ({
                         ...prev,
-                        title: titleVal,
-                        slug: prev.slug === '' || prev.slug === prev.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                          ? titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                          : prev.slug
+                        title: e.target.value,
+                        slug: editingNews ? prev.slug : e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
                       }));
                     }}
                     placeholder="e.g. Nile Waves Tour Announced"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">URL Slug (Unique)</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Slug Identifier</label>
                   <input
                     type="text"
                     required
                     value={newsForm.slug}
                     onChange={(e) => setNewsForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
                     placeholder="e.g. tour-announced"
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Category Type</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Post Type</label>
                   <select
                     value={newsForm.type}
                     onChange={(e) => setNewsForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-3 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none cursor-pointer"
                   >
                     <option value="NEWS">NEWS</option>
                     <option value="DEVLOG">DEVLOG</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Publish Date & Time</label>
+                  <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">Publish Timestamp</label>
                   <input
                     type="datetime-local"
                     required
                     value={newsForm.publishedAt}
                     onChange={(e) => setNewsForm(prev => ({ ...prev, publishedAt: e.target.value }))}
-                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none"
+                    className="w-full h-10 px-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">HTML Body Content</label>
+                <label className="text-[10px] text-zinc-555 uppercase tracking-wider block font-mono font-bold">HTML Body Content</label>
                 <textarea
-                  required
-                  rows={6}
                   value={newsForm.bodyHtml}
                   onChange={(e) => setNewsForm(prev => ({ ...prev, bodyHtml: e.target.value }))}
                   placeholder="<p>Write news body here...</p>"
-                  className="w-full p-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-primary text-white focus:outline-none resize-none"
+                  className="w-full p-4 rounded-md bg-zinc-900 border border-zinc-800 focus:border-zinc-700 text-white focus:outline-none resize-none h-32 font-mono text-[11px]"
                 />
               </div>
 
               <div className="pt-3">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer "
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs transition active:scale-95 cursor-pointer"
                 >
                   {editingNews ? 'Update News Post' : 'Create News Post'}
                 </button>
