@@ -29,26 +29,27 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
       id: orderId,
       userId: sessionUser.userId,
       status: 'PENDING',
-      stripeSessionId: { not: null },
+      stripePaymentIntentId: { not: null },
     },
     select: {
-      stripeSessionId: true,
+      stripePaymentIntentId: true,
     },
   });
 
-  if (!order?.stripeSessionId) {
+  if (!order?.stripePaymentIntentId) {
     redirect('/orders');
   }
 
   const stripe = new Stripe(getStripeSecretKey(), {
     apiVersion: '2024-04-10' as Stripe.LatestApiVersion,
   });
-  const checkoutSession = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
+  const paymentIntent = await stripe.paymentIntents.retrieve(order.stripePaymentIntentId);
 
   if (
-    checkoutSession.metadata?.orderId !== orderId ||
-    checkoutSession.status !== 'open' ||
-    !checkoutSession.client_secret
+    paymentIntent.metadata.orderId !== orderId ||
+    paymentIntent.status === 'canceled' ||
+    paymentIntent.status === 'succeeded' ||
+    !paymentIntent.client_secret
   ) {
     redirect('/orders');
   }
@@ -58,8 +59,10 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <CheckoutClient 
-        clientSecret={checkoutSession.client_secret}
+        clientSecret={paymentIntent.client_secret}
         publishableKey={publishableKey} 
+        orderId={orderId}
+        paymentIntentId={paymentIntent.id}
       />
     </div>
   );

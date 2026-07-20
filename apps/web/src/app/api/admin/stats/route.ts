@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       where: {
         OR: [
           paidOrderWhere,
-          { status: 'PENDING', stripeSessionId: { not: null } },
+          { status: 'PENDING', stripePaymentIntentId: { not: null } },
         ],
       },
     });
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       where: paidOrderWhere,
     });
     const pendingOrdersCount = await prisma.order.count({
-      where: { status: 'PENDING', stripeSessionId: { not: null } },
+      where: { status: 'PENDING', stripePaymentIntentId: { not: null } },
     });
     const completedOrdersCount = await prisma.order.count({
       where: paidOrderWhere,
@@ -227,7 +227,7 @@ export async function GET(req: NextRequest) {
       where: {
         OR: [
           paidOrderWhere,
-          { status: 'PENDING', stripeSessionId: { not: null } },
+          { status: 'PENDING', stripePaymentIntentId: { not: null } },
         ],
       },
       orderBy: { createdAt: 'desc' },

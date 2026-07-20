@@ -13,6 +13,7 @@
     "@radix-ui/react-slider": "^1.1.2",
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
+    "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.9.0",
     "clsx": "^2.1.1",
     "html5-qrcode": "^2.3.8",

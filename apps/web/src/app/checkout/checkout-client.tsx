@@ -1,58 +1,21 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { ArrowLeft, ShieldCheck, Ticket as TicketIcon, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { StripePaymentForm } from '@/modules/commerce/components/stripe-payment-form';
 
 interface CheckoutClientProps {
   clientSecret: string;
   publishableKey: string;
+  orderId: string;
+  paymentIntentId: string;
 }
 
-export function CheckoutClient({ clientSecret, publishableKey }: CheckoutClientProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const checkoutInstanceRef = useRef<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!clientSecret || !publishableKey || !containerRef.current) return;
-
-    let active = true;
-
-    async function initializeCheckout() {
-      try {
-        const stripe = await loadStripe(publishableKey);
-        if (!stripe || !active) return;
-
-        const checkout = await (stripe as any).createEmbeddedCheckoutPage({
-          clientSecret,
-        });
-
-        if (active) {
-          checkout.mount(containerRef.current);
-          checkoutInstanceRef.current = checkout;
-          setLoading(false);
-        }
-      } catch (err: any) {
-        console.error('Error loading Stripe checkout:', err);
-        if (active) {
-          setError(err.message || 'Failed to initialize payment form.');
-          setLoading(false);
-        }
-      }
-    }
-
-    initializeCheckout();
-
-    return () => {
-      active = false;
-      if (checkoutInstanceRef.current) {
-        checkoutInstanceRef.current.destroy();
-      }
-    };
-  }, [clientSecret, publishableKey]);
+export function CheckoutClient({ clientSecret, publishableKey, orderId, paymentIntentId }: CheckoutClientProps) {
+  const stripePromise = loadStripe(publishableKey);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start select-none pt-12 text-left">
@@ -71,37 +34,19 @@ export function CheckoutClient({ clientSecret, publishableKey }: CheckoutClientP
           {/* Backglow decor */}
           <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-primary/5 blur-[90px] pointer-events-none" />
 
-          {loading && (
-            <div className="flex flex-col items-center justify-center space-y-4 py-20 relative z-10">
-              <div className="h-8 w-8 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
-              <p className="text-xs font-mono uppercase tracking-wider text-zinc-500">Decrypting secure payment gate...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-20 space-y-6 max-w-sm mx-auto relative z-10">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500 border border-red-500/20">
-                <ShieldCheck className="h-6 w-6" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-serif font-bold text-white uppercase">GATEWAY BLOCKED</h3>
-                <p className="text-xs text-zinc-450 leading-relaxed font-mono">{error}</p>
-              </div>
-              <Link
-                href="/shop"
-                className="inline-flex h-9 px-6 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-bold uppercase tracking-wider text-white transition hover:bg-zinc-700 active:scale-95"
-              >
-                Go back to boutique
-              </Link>
-            </div>
-          )}
-
-          {/* Stripe Mount Point */}
-          <div 
-            ref={containerRef} 
-            id="checkout" 
-            className={`${loading || error ? 'hidden' : 'block'} w-full transition-opacity duration-300 relative z-10`}
-          />
+          <Elements
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              appearance: { theme: 'night', variables: { colorPrimary: '#ff3366' } },
+            }}
+          >
+            <StripePaymentForm
+              clientSecret={clientSecret}
+              returnUrl={`/api/checkout/success?payment_intent=${encodeURIComponent(paymentIntentId)}&order_id=${encodeURIComponent(orderId)}`}
+              submitLabel="Complete purchase"
+            />
+          </Elements>
         </div>
       </div>
 

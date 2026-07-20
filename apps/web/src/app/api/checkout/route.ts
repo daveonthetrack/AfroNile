@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import Stripe from 'stripe';
-import { getStripeSecretKey, getAppOrigin } from '@/lib/env';
+import { getStripeSecretKey } from '@/lib/env';
 import { getTokenFromRequest, requireSessionUser } from '@/lib/auth';
 import { CheckoutCartSchema } from '@/lib/validation';
 import { AuditService } from '@/lib/services/audit.service';
@@ -172,88 +172,37 @@ export async function POST(req: NextRequest) {
     });
     reservedOrderId = transactionResult.orderId;
 
-    // Initialize Stripe session creation
+    // Create a PaymentIntent for the custom Elements checkout. The client renders
+    // Apple Pay in the Express Checkout Element before the standard payment form.
     const stripe = new Stripe(getStripeSecretKey(), {
       apiVersion: '2024-04-10' as Stripe.LatestApiVersion,
     });
 
-    const origin = getAppOrigin(req);
-
-    const stripeLineItems = transactionResult.lineItems.map((item) => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.name,
-          metadata: {
-            sku: item.sku,
-          },
-        },
-        unit_amount: item.unitPriceCents,
-      },
-      quantity: item.quantity,
-    }));
-
-    if (transactionResult.shippingCents > 0) {
-      stripeLineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: 'Shipping & Handling (Physical Merch)',
-            metadata: {
-              sku: 'SHIPPING_FEE',
-            },
-          },
-          unit_amount: transactionResult.shippingCents,
-        },
-        quantity: 1,
-      });
-    }
-
-    if (transactionResult.taxCents > 0) {
-      stripeLineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: 'Estimated Sales Tax (8%)',
-            metadata: {
-              sku: 'TAX_FEE',
-            },
-          },
-          unit_amount: transactionResult.taxCents,
-        },
-        quantity: 1,
-      });
-    }
-
     const stripeCustomerOption = transactionResult.dbUser?.stripeCustomerId
       ? { customer: transactionResult.dbUser.stripeCustomerId }
-      : transactionResult.dbUser?.email
-        ? { customer_email: transactionResult.dbUser.email }
-        : {};
+      : {};
 
-    let session: Stripe.Checkout.Session;
+    let paymentIntent: Stripe.PaymentIntent;
     try {
-      session = await stripe.checkout.sessions.create(
+      paymentIntent = await stripe.paymentIntents.create(
         {
-          ui_mode: 'embedded' as Stripe.Checkout.SessionCreateParams.UiMode,
-          payment_method_types: ['card'],
-          line_items: stripeLineItems,
-          mode: 'payment',
-          return_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${transactionResult.orderId}`,
-          ...stripeCustomerOption,
-          payment_intent_data: {
-            metadata: {
-              orderId: transactionResult.orderId,
-              userId,
-            },
+          amount: transactionResult.totalAmountCents,
+          currency: 'usd',
+          automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: 'never',
           },
+          ...(transactionResult.dbUser?.email
+            ? { receipt_email: transactionResult.dbUser.email }
+            : {}),
+          ...stripeCustomerOption,
           metadata: {
             orderId: transactionResult.orderId,
             userId,
           },
         },
         {
-          idempotencyKey: req.headers.get('idempotency-key') || `checkout:${transactionResult.orderId}`,
+          idempotencyKey: req.headers.get('idempotency-key') || `payment-intent:${transactionResult.orderId}`,
         }
       );
     } catch (error) {
@@ -262,7 +211,7 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    if (!session.client_secret) {
+    if (!paymentIntent.client_secret) {
       await releaseReservation(transactionResult.orderId);
       reservedOrderId = null;
       return NextResponse.json(
@@ -274,7 +223,7 @@ export async function POST(req: NextRequest) {
     await prisma.order.update({
       where: { id: transactionResult.orderId },
       data: {
-        stripeSessionId: session.id,
+        stripePaymentIntentId: paymentIntent.id,
       },
     });
     reservedOrderId = null;
@@ -306,7 +255,7 @@ export async function POST(req: NextRequest) {
         orderId: transactionResult.orderId,
         orderNumber: transactionResult.orderNumber,
         totalAmountCents: transactionResult.totalAmountCents,
-        stripeSessionId: session.id,
+        stripePaymentIntentId: paymentIntent.id,
       },
       { status: 201 }
     );

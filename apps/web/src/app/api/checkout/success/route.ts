@@ -8,15 +8,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const sessionId = searchParams.get('session_id');
+  const paymentIntentId = searchParams.get('payment_intent');
   const orderId = searchParams.get('order_id');
 
   if (!orderId) {
     return NextResponse.redirect(new URL('/shop?error=missing_order_id', req.url));
   }
 
-  if (!sessionId) {
-    return NextResponse.redirect(new URL('/shop?error=missing_session_id', req.url));
+  if (!paymentIntentId) {
+    return NextResponse.redirect(new URL('/shop?error=missing_payment_intent_id', req.url));
   }
 
   try {
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       where: { id: orderId },
     });
 
-    if (!order || order.userId !== sessionUser.userId || order.stripeSessionId !== sessionId) {
+    if (!order || order.userId !== sessionUser.userId || order.stripePaymentIntentId !== paymentIntentId) {
       return NextResponse.redirect(new URL(`/shop?error=order_not_found&order_id=${orderId}`, req.url));
     }
 
@@ -42,14 +42,14 @@ export async function GET(req: NextRequest) {
       apiVersion: '2024-04-10' as Stripe.LatestApiVersion,
     });
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    if (session.payment_status !== 'paid') {
+    if (paymentIntent.status !== 'succeeded') {
       return NextResponse.redirect(new URL(`/shop?error=payment_failed&order_id=${orderId}`, req.url));
     }
 
-    if (session.metadata?.orderId !== orderId) {
-      return NextResponse.redirect(new URL('/shop?error=session_mismatch', req.url));
+    if (paymentIntent.metadata.orderId !== orderId) {
+      return NextResponse.redirect(new URL('/shop?error=payment_intent_mismatch', req.url));
     }
 
     // Poll briefly for webhook fulfillment (read-only — never writes to DB)

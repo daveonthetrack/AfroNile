@@ -86,8 +86,23 @@ export async function POST(req: NextRequest) {
 
     // 2. Dispatch Event Type
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
+      case 'checkout.session.completed':
+      case 'payment_intent.succeeded': {
+        // Support both legacy Checkout Sessions and the Elements PaymentIntent flow.
+        // Keeping the normalized session shape lets existing fulfillment remain
+        // idempotent while Apple Pay is confirmed through PaymentIntents.
+        const session =
+          event.type === 'checkout.session.completed'
+            ? (event.data.object as Stripe.Checkout.Session)
+            : ({
+                id: (event.data.object as Stripe.PaymentIntent).id,
+                metadata: (event.data.object as Stripe.PaymentIntent).metadata,
+                payment_status: 'paid',
+                currency: (event.data.object as Stripe.PaymentIntent).currency,
+                amount_total: (event.data.object as Stripe.PaymentIntent).amount_received,
+                payment_intent: (event.data.object as Stripe.PaymentIntent).id,
+                customer: (event.data.object as Stripe.PaymentIntent).customer,
+              } as Stripe.Checkout.Session);
         const metadata = session.metadata;
 
         if (metadata?.orderId) {
@@ -112,7 +127,7 @@ export async function POST(req: NextRequest) {
             session.payment_status !== 'paid' ||
             session.currency !== 'usd' ||
             session.amount_total !== order.totalAmountCents ||
-            session.id !== order.stripeSessionId
+            (session.id !== order.stripeSessionId && session.payment_intent !== order.stripePaymentIntentId)
           ) {
             console.error(`Stripe checkout verification failed for order ${orderId}.`);
             break;
@@ -389,11 +404,50 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      case 'payment_intent.succeeded': {
+      case 'payment_intent.payment_failed': {
         break;
       }
 
-      case 'payment_intent.payment_failed': {
+      case 'payment_intent.canceled': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        const metadata = paymentIntent.metadata;
+
+        if (metadata.orderId) {
+          await prisma.$transaction(async (tx) => {
+            const order = await tx.order.findFirst({
+              where: {
+                id: metadata.orderId,
+                stripePaymentIntentId: paymentIntent.id,
+                status: 'PENDING',
+              },
+              include: { orderItems: true },
+            });
+
+            if (!order) return;
+
+            await Promise.all(
+              order.orderItems.map((item) =>
+                tx.product.update({
+                  where: { id: item.productId },
+                  data: { stockQuantity: { increment: item.quantity } },
+                })
+              )
+            );
+            await tx.order.update({
+              where: { id: order.id },
+              data: { status: 'FAILED', fulfillmentStatus: 'FAILED' },
+            });
+          });
+        }
+
+        if (metadata.contributionId) {
+          await prisma.supportContribution.deleteMany({
+            where: {
+              id: metadata.contributionId,
+              stripeSessionId: null,
+            },
+          });
+        }
         break;
       }
 

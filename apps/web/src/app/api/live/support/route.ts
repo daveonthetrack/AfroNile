@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import Stripe from 'stripe';
-import { getStripeSecretKey, getAppOrigin } from '@/lib/env';
+import { getStripeSecretKey } from '@/lib/env';
 import { getSessionUser, getTokenFromRequest } from '@/lib/auth';
 import { TippingSchema } from '@/lib/validation';
 import { AuditService } from '@/lib/services/audit.service';
@@ -85,34 +85,21 @@ export async function POST(req: NextRequest) {
       apiVersion: '2024-04-10' as Stripe.LatestApiVersion,
     });
 
-    const origin = getAppOrigin(req);
-
-    const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded' as Stripe.Checkout.SessionCreateParams.UiMode,
-      payment_method_types: ['card', 'cashapp'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'AfroNile Concert Support',
-              description: comment ? `Vibe: "${comment}"` : 'Thank you for supporting performance art!',
-            },
-            unit_amount: amountCents,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      return_url: `${origin}/live/memory/${contribution.id}?session_id={CHECKOUT_SESSION_ID}`,
-      customer_email: email.trim(),
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency: 'usd',
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never',
+      },
+      receipt_email: email.trim(),
       metadata: {
         contributionId: contribution.id,
         comment: comment || '',
       },
     });
 
-    if (!session.client_secret) {
+    if (!paymentIntent.client_secret) {
       await prisma.supportContribution.delete({
         where: { id: contribution.id },
       });
@@ -134,8 +121,8 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         contributionId: contribution.id,
-        clientSecret: session.client_secret,
-        stripeSessionId: session.id,
+        clientSecret: paymentIntent.client_secret,
+        stripePaymentIntentId: paymentIntent.id,
       },
       { status: 201 }
     );
