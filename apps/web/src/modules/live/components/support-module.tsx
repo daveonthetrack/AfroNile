@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Sparkles, CreditCard } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { SUPPORT_TIERS } from '../constants';
+import { StripePaymentForm } from '@/modules/commerce/components/stripe-payment-form';
 
 interface SupportModuleProps {
   eventId: string;
@@ -37,50 +39,7 @@ export function SupportModule({
   
   // Stripe Embedded states
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
-  const checkoutContainerRef = useRef<HTMLDivElement>(null);
-  const checkoutInstanceRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (!stripeClientSecret || !checkoutContainerRef.current) return;
-
-    let active = true;
-
-    async function initializeEmbeddedCheckout() {
-      try {
-        const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
-        const stripe = await loadStripe(publishableKey);
-        if (!stripe || !active) return;
-
-        const checkout = await (stripe as any).createEmbeddedCheckoutPage({
-          clientSecret: stripeClientSecret,
-        });
-
-        if (active) {
-          checkout.mount(checkoutContainerRef.current);
-          checkoutInstanceRef.current = checkout;
-          
-          // Smooth scroll to the checkout portal after rendering
-          setTimeout(() => {
-            checkoutContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 200);
-        }
-      } catch (err: any) {
-        console.error('Failed to initialize embedded Stripe Checkout locally:', err);
-        if (active) {
-          setError(err.message || 'Could not load payment form.');
-        }
-      }
-    }
-
-    initializeEmbeddedCheckout();
-
-    return () => {
-      active = false;
-      if (checkoutInstanceRef.current) {
-        checkoutInstanceRef.current.destroy();
-      }
-    };
-  }, [stripeClientSecret]);
+  const [contributionId, setContributionId] = useState<string | null>(null);
 
   const handleSupportSubmit = async () => {
     setError(null);
@@ -127,6 +86,10 @@ export function SupportModule({
 
       if (data.clientSecret) {
         setStripeClientSecret(data.clientSecret);
+        setContributionId(data.contributionId);
+        setTimeout(() => {
+          document.getElementById('support-payment')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
       } else {
         throw new Error('Payment session could not be initialized.');
       }
@@ -269,9 +232,21 @@ export function SupportModule({
       </div>
 
       {/* Expandable Embedded Stripe Form */}
-      {stripeClientSecret && (
-        <div className="bg-zinc-950/65 border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl relative min-h-[350px] animate-in slide-in-from-top duration-500 mt-6">
-          <div ref={checkoutContainerRef} id="checkout" className="w-full transition-opacity duration-300" />
+      {stripeClientSecret && contributionId && (
+        <div id="support-payment" className="bg-zinc-950/65 border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl relative animate-in slide-in-from-top duration-500 mt-6">
+          <Elements
+            stripe={loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')}
+            options={{
+              clientSecret: stripeClientSecret,
+              appearance: { theme: 'night', variables: { colorPrimary: '#ff3366' } },
+            }}
+          >
+            <StripePaymentForm
+              clientSecret={stripeClientSecret}
+              returnUrl={`/live/memory/${contributionId}`}
+              submitLabel="Share support"
+            />
+          </Elements>
         </div>
       )}
 
