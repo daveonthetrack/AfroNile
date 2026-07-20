@@ -5,17 +5,14 @@ export interface AssetDistributionResult {
   authorized: boolean;
   streamUrl?: string;
   expiresAt?: Date;
-  error?: 'UNAUTHORIZED' | 'ORDER_NOT_FOUND' | 'INVALID_PRODUCT' | 'DATABASE_ERROR';
+  error?: 'INVALID_PRODUCT' | 'DATABASE_ERROR';
 }
 
 /**
- * Handles secure asset authorization and signed streaming URL generation.
+ * Generates a secure, time-limited URL for a public audio stream.
  * Audio bytes are served only via /api/audio/stream after token validation.
  */
-export async function authorizeAndDistributeAsset(
-  userId: string,
-  songId: string
-): Promise<AssetDistributionResult> {
+export async function authorizeAndDistributeAsset(songId: string): Promise<AssetDistributionResult> {
   try {
     const song = await prisma.song.findUnique({
       where: { id: songId },
@@ -24,30 +21,6 @@ export async function authorizeAndDistributeAsset(
 
     if (!song) {
       return { authorized: false, error: 'INVALID_PRODUCT' };
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { role: true },
-    });
-    const isAdminUser = user?.role?.name === 'ADMIN';
-
-    const albumSku = `ALBUM_${song.album.id}`;
-
-    const paidPurchase = await prisma.order.findFirst({
-      where: {
-        userId,
-        status: 'PAID',
-        orderItems: {
-          some: {
-            product: { sku: albumSku },
-          },
-        },
-      },
-    });
-
-    if (!paidPurchase && !isAdminUser) {
-      return { authorized: false, error: 'UNAUTHORIZED' };
     }
 
     const expirationMs = 3600 * 1000;

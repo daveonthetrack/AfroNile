@@ -64,7 +64,7 @@ export function GlobalAudioPlayer() {
           }
         } catch (err: any) {
           console.error('Failed to load secure audio track:', err);
-          alert(`Playback Error: ${err.message || 'You must purchase the album to stream this track.'}`);
+          alert(`Playback Error: ${err.message || 'This audio stream is currently unavailable.'}`);
           setPlaying(false);
         }
       }

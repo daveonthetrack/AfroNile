@@ -1,38 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeAndDistributeAsset } from '../../../../modules/audio/assetDistribution';
-import { verifyToken } from '@repo/auth';
-import { getJwtSecret } from '@/lib/env';
 
 /**
  * GET /api/audio/[songId]
- * Exposes a secure gateway to retrieve time-limited signed audio URLs.
- * Checks user purchase history before permitting access to audio assets.
+ * Returns a time-limited signed URL for a public audio stream.
  */
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: { songId: string } }
 ) {
   try {
     const { songId } = params;
-    
-    // Resolve user ID from secure auth cookie signature
-    const token = req.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json(
-        { error: 'UNAUTHORIZED', message: 'You must be signed in to stream music.' },
-        { status: 401 }
-      );
-    }
-
-    const decoded = verifyToken(token, getJwtSecret());
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'UNAUTHORIZED', message: 'Your session is invalid or expired. Please sign in again.' },
-        { status: 401 }
-      );
-    }
-
-    const userId = decoded.userId;
 
     if (!songId) {
       return NextResponse.json(
@@ -41,8 +19,7 @@ export async function GET(
       );
     }
 
-    // Call secure asset distribution validation logic
-    const authResult = await authorizeAndDistributeAsset(userId, songId);
+    const authResult = await authorizeAndDistributeAsset(songId);
 
     if (!authResult.authorized) {
       if (authResult.error === 'INVALID_PRODUCT') {
@@ -52,11 +29,8 @@ export async function GET(
         );
       }
       return NextResponse.json(
-        { 
-          error: 'PURCHASE_REQUIRED', 
-          message: 'Access denied. You must purchase the album to stream this audio track.' 
-        },
-        { status: 403 }
+        { error: 'STREAM_UNAVAILABLE', message: 'This audio stream is currently unavailable.' },
+        { status: 503 }
       );
     }
 
