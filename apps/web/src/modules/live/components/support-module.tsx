@@ -160,8 +160,7 @@ export function SupportModule({
       {/* 1. Share Your Story Card */}
       <div className="glass-card rounded-[2rem] p-5 space-y-3 shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden border border-white/5 hover:border-primary/20">
         <div className="flex justify-between items-center">
-          <h4 className="text-sm font-bold tracking-wider text-zinc-400 uppercase font-mono">Share Your Story</h4>
-          <span className="text-[8px] font-mono text-primary uppercase tracking-widest font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">Stage Feed</span>
+          <h4 className="whitespace-nowrap font-serif text-2xl font-bold leading-none tracking-[0.04em] text-zinc-100 uppercase md:text-3xl">Share Your Story</h4>
         </div>
         <textarea
           value={comment}
@@ -206,10 +205,9 @@ export function SupportModule({
           </span>
         </div>
         
-        <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="grid grid-cols-4 gap-3 text-center">
           {SUPPORT_TIERS.map((amount) => {
             const isSelected = selectedTier === amount;
-            const boostMapping: Record<number, string> = { 5: '+10', 10: '+25', 20: '+60', 50: '+200' };
             return (
               <button
                 key={amount}
@@ -219,20 +217,13 @@ export function SupportModule({
                   setCustomAmount('');
                   setError(null);
                 }}
-                className={`h-15 rounded-2xl flex flex-col justify-center items-center border transition-all duration-300 relative ${
+                className={`h-20 rounded-2xl flex flex-col justify-center items-center border transition-all duration-300 relative ${
                   isSelected
                     ? 'bg-white border-white text-black scale-105 shadow-[0_8px_20px_-4px_rgba(212,175,55,0.3)] ring-2 ring-primary z-10'
                     : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:border-white/25 hover:scale-102 hover:text-white disabled:opacity-50'
                 }`}
               >
-                <span className="text-xs font-black font-mono tracking-tight">${amount}</span>
-                <span className={`text-[6.5px] font-bold font-mono mt-1 px-1 py-0.5 rounded tracking-tighter uppercase transition-colors ${
-                  isSelected 
-                    ? 'bg-amber-500/10 text-amber-700' 
-                    : 'bg-white/5 text-zinc-500'
-                }`}>
-                  {boostMapping[amount]} BOOST
-                </span>
+                <span className="text-base font-black font-mono tracking-tight">${amount}</span>
               </button>
             );
           })}
@@ -271,7 +262,7 @@ export function SupportModule({
           ) : (
             <>
               <CreditCard className="h-4 w-4" />
-              <span>Contribute Cairo Waves</span>
+              <span>Share</span>
             </>
           )}
         </button>

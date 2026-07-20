@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SupportModule } from '../../modules/live/components/support-module';
 import { useLiveState } from '../../modules/live/hooks/useLiveState';
-import { UpcomingShows } from '../../modules/live/components/upcoming-shows';
 
 interface LiveClientProps {
   events: {
@@ -24,7 +23,7 @@ interface LiveClientProps {
   }[];
 }
 
-export function LiveClient({ events, products }: LiveClientProps) {
+export function LiveClient({ events }: LiveClientProps) {
   const searchParams = useSearchParams();
   const nextShow = events[0] || null;
   const showParam = searchParams.get('show');
@@ -42,9 +41,6 @@ export function LiveClient({ events, products }: LiveClientProps) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [comment, setComment] = useState('');
-
-  // Ticket product matching for next performance
-  const ticketProduct = products.find((p) => p.sku === `TICKET_${initialShowId}`) || null;
 
   // Play dynamic Entry Splash if launched from QR code scan (?show=...)
   useEffect(() => {
@@ -160,8 +156,6 @@ export function LiveClient({ events, products }: LiveClientProps) {
           setComment={setComment}
         />
 
-        {/* Next shows block */}
-        <UpcomingShows events={events} ticketProduct={ticketProduct} />
       </main>
 
       {/* Glowing Cairo Soundwave Line visual footer */}
