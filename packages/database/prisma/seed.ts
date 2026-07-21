@@ -104,15 +104,22 @@ async function main() {
     where: { slug: 'afronile' },
     update: {
       bio: 'AfroNile is a story of resilience, rebirth, and the power of music to bridge generations. Formed by Selamino and Dave On The Track, AfroNile embodies the perfect balance of tradition and innovation.',
+      socialLinks: {
+        spotify: 'https://open.spotify.com/artist/3CJxwpev37bR1n9QlUpv8B',
+        instagram: 'https://www.instagram.com/afro_nile/',
+        facebook: 'https://www.facebook.com/p/AfroNile-100094462790527/',
+        youtube: 'https://www.youtube.com/channel/UChTblFvJVU3iWx_5SURbntg',
+      },
     },
     create: {
       stageName: 'AfroNile',
       slug: 'afronile',
       bio: 'AfroNile is a story of resilience, rebirth, and the power of music to bridge generations. Formed by Selamino and Dave On The Track, AfroNile embodies the perfect balance of tradition and innovation.',
       socialLinks: {
-        spotify: 'https://open.spotify.com/artist/4X9z8e4b8rT7k9m2Q',
-        instagram: 'https://instagram.com/afronile.music',
-        youtube: 'https://youtube.com/c/AfroNileOfficial',
+        spotify: 'https://open.spotify.com/artist/3CJxwpev37bR1n9QlUpv8B',
+        instagram: 'https://www.instagram.com/afro_nile/',
+        facebook: 'https://www.facebook.com/p/AfroNile-100094462790527/',
+        youtube: 'https://www.youtube.com/channel/UChTblFvJVU3iWx_5SURbntg',
       },
     },
   });

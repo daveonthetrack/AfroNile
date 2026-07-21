@@ -83,6 +83,7 @@ const SOCIAL_LABELS: Record<string, string> = {
   appleMusic: 'Apple Music',
   instagram: 'Instagram',
   youtube: 'YouTube',
+  facebook: 'Facebook',
   twitter: 'Twitter',
   tiktok: 'TikTok',
 };
