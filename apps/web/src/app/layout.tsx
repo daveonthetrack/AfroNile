@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Cinzel } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { NavigationBar } from '../components/shared/navigation-bar';
 import { GlobalAudioPlayer } from '../components/shared/global-audio-player';
@@ -9,16 +9,9 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@repo/auth';
 import { getJwtSecret } from '@/lib/env';
 
-const fontSans = Outfit({
+const fontSans = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
-  weight: ['300', '400', '500', '600', '700', '800'],
-});
-
-const fontSerif = Cinzel({
-  subsets: ['latin'],
-  variable: '--font-serif',
-  weight: ['400', '500', '600', '700', '800', '900'],
 });
 
 export const metadata: Metadata = {
@@ -58,7 +51,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${fontSans.variable} ${fontSerif.variable} dark scroll-smooth`}>
+    <html lang="en" className={`${fontSans.variable} dark scroll-smooth`}>
       <body className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased overflow-x-hidden">
         <NavigationBar user={currentUser} />
         <MainContainer>

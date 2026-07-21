@@ -1049,7 +1049,7 @@ export default function AdminDashboardClient() {
                           (i === 0 || i === salesChartInfo.coords.length - 1 || i % 5 === 0) && (
                             <g key={i}>
                               <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#d95f30" strokeWidth="1.5" />
-                              <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="monospace">
+                              <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="var(--font-sans)">
                                 {timeSeries[i]?.date}
                               </text>
                             </g>
@@ -1106,7 +1106,7 @@ export default function AdminDashboardClient() {
                           (i === 0 || i === donationsChartInfo.coords.length - 1 || i % 5 === 0) && (
                             <g key={i}>
                               <circle cx={c.x} cy={c.y} r="3" fill="#09090b" stroke="#f3b775" strokeWidth="1.5" />
-                              <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="monospace">
+                              <text x={c.x} y={chartHeight - 8} fill="rgba(255,255,255,0.2)" fontSize="8" textAnchor="middle" fontFamily="var(--font-sans)">
                                 {timeSeries[i]?.date}
                               </text>
                             </g>

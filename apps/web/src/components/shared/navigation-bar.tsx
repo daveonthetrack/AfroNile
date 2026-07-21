@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
@@ -33,6 +33,17 @@ export function NavigationBar({ user }: NavigationBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { setIsOpen, getItemCount } = useCartStore();
   const itemCount = getItemCount();
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   if (pathname === '/live/screen') {
     return null;
@@ -117,7 +128,7 @@ export function NavigationBar({ user }: NavigationBarProps) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
           </span>
-          <span>LIVE Companion</span>
+          <span>LIVE</span>
         </Link>
 
         {/* Shopping Cart Trigger */}
@@ -250,9 +261,20 @@ export function NavigationBar({ user }: NavigationBarProps) {
         </button>
       </div>
 
+      {/* Mobile Drawer Panel Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm md:hidden z-[-1]"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Mobile Drawer Panel */}
       {mobileMenuOpen && (
-        <div className="absolute top-20 left-0 right-0 glass-card rounded-3xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-4 duration-300 z-50">
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-20 left-0 right-0 rounded-3xl border border-[#3a241b] bg-[#17100d] p-4 shadow-2xl flex flex-col gap-3 animate-in slide-in-from-top-4 duration-300 z-50 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none"
+        >
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
             return (

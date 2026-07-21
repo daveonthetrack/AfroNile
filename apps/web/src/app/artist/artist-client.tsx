@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Quote, Music, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
+import { Quote, ExternalLink } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ArtistClientProps {
@@ -17,47 +16,65 @@ interface ArtistClientProps {
 const FALLBACK_CHAPTERS = [
   {
     number: '01',
-    title: 'Nile Basin Frequencies',
-    subtitle: 'The Nile Rhythm Roots',
-    content:
-      'Born along the edge of the Nile, the project represents a sonic bridge between traditional East African percussion patterns and the modern modular frequencies of Afrobeat. The music pulls inspiration from ancient tempos, filtering them through dynamic analog drum machines and custom Eurorack synthesizers.',
+    title: 'The Maestro',
+    subtitle: 'Who is Selamino?',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Selam Seyoum Woldemariam, affectionately known as &quot;Selamino,&quot; is a legendary Ethiopian guitarist and a pivotal figure in the development of modern Ethiopian music. With a career spanning over five decades, he is celebrated for his distinctive playing style that blends traditional Ethiopian melodies with influences from rock, jazz, and funk.
+        </p>
+        <p>
+          Selamino rose to prominence as a key member of the influential Ibex Band, which later became the Roha Band; one of the most iconic groups in Ethiopian music history. Through his work with Roha and other collaborations, Selamino played an integral role in creating the &quot;Ethiopian groove&quot; that defined the country&apos;s golden age of music in the 1970s and 1980s.
+        </p>
+        <p>
+          Beyond his work as a performer, Selamino has also contributed to the preservation and evolution of Ethiopian music. His guitar work has graced countless classic recordings, collaborating with renowned vocalists such as Mahmoud Ahmed, Aster Aweke, and Tilahun Gessesse. Selamino’s mastery of the instrument, coupled with his ability to seamlessly bridge Ethiopia’s rich musical heritage with contemporary sounds, has made him a beloved figure both at home and among the global Ethiopian diaspora. Even as the music scene has evolved, Selamino continues to inspire new generations of musicians with his timeless artistry and dedication to keeping Ethiopian music alive.
+        </p>
+      </div>
+    ),
   },
   {
     number: '02',
-    title: 'Analog Echoes',
-    subtitle: 'Preserving Sound Character',
-    content:
-      'In an era dominated by flat digital replication, AfroNile operates entirely in the hybrid space. All core tracking utilizes physical synthesizers, organic wood percussion, and tape compression. Each frequency contains warmth, texture, and natural imperfections that connect with listeners on a mechanical, physical level.',
+    title: 'The Prodigious Producer',
+    subtitle: 'Who is Dave On The Track?',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Dawit Hagos, known professionally as Dave On The Track, is a Music Producer, Multi-Instrumentalist, DJ, and Audio Engineer dedicated to crafting dynamic, genre-blending soundscapes. With a deep passion for collaboration, he has worked with artists across the globe, including Ethiopian artists Rophnan and SALEMIA, Kenyan artist Rydah, and Puerto Rican artist Noelkinz.
+        </p>
+        <p>
+          His production credits include ‘Alem Bire’, SALEMIA’s viral debut, as well as standout projects like ‘Ligoda’ and ‘Alula’, highlighting his versatility and ability to merge diverse musical styles.
+        </p>
+        <p>
+          Beyond the studio, Dave On The Track is an active member of the Recording Academy (DC Chapter), where he represents AfroNile and East African music on an international stage. Through his work, he advocates for the region’s rich musical heritage, ensuring its artists gain the global recognition they deserve. His mission extends beyond production—he is committed to elevating East African music and fostering meaningful connections between cultures through sound.
+        </p>
+      </div>
+    ),
   },
   {
     number: '03',
-    title: 'Cryptographic Autonomy',
-    subtitle: 'Direct Artist-to-Listener Connection',
-    content:
-      'We believe in reclaiming the agency of musical distribution. Through peer-to-peer verification and cryptographic ticket ledgers, AfroNile eliminates third-party gatekeepers. Every interaction is built directly on-chain, ensuring that listeners support the performance directly, and the sound belongs to the community.',
+    title: 'The AfroNile Experience',
+    subtitle: 'The story of AfroNile',
+    content: (
+      <div className="space-y-4">
+        <p>
+          AfroNile is a story of resilience, rebirth, and the power of music to bridge generations. Formed by Selamino and Dave On The Track, AfroNile embodies the perfect balance of tradition and innovation.
+        </p>
+        <p>
+          Their journey began in the basement studio of Dave’s sister on Accord Drive in Potomac, a humble yet transformative space where creativity flourished. For nearly a year, they immersed themselves in music, dedicating over 10 hours a day to composing, experimenting, and pushing the boundaries of sound. It was in this cocoon of dedication that AfroNile was born, emerging with a unique sonic identity that blends deep musical roots with modern production techniques.
+        </p>
+        <p>
+          Through countless challenges, the difficulty of assembling a like-minded band, and the ever-evolving technological landscape, AfroNile remains undeterred. Rather than resisting change, they embrace it, using technology as a tool to elevate their artistry. Their story is a reminder to musicians everywhere: no matter the obstacles, passion and perseverance will always find a way.
+        </p>
+        <p>
+          With a 70-year-old musician and a young, tech-savvy 30-year-old, their combined years divided by two symbolize the essence of AfroNile; an age of 50. Blending the wisdom of the past with the creativity of the present, AfroNile is a movement. It is hope. And like the legendary Ibex Band & Roha Band before them, their perseverance is destined to pay off.
+        </p>
+      </div>
+    ),
   },
 ];
 
-function buildChaptersFromBio(bio: string | null) {
-  if (!bio?.trim()) {
-    return FALLBACK_CHAPTERS;
-  }
-
-  const paragraphs = bio
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length === 0) {
-    return FALLBACK_CHAPTERS;
-  }
-
-  return paragraphs.map((content, index) => ({
-    number: String(index + 1).padStart(2, '0'),
-    title: `Chapter ${index + 1}`,
-    subtitle: 'Artist Chronicle',
-    content,
-  }));
+function buildChaptersFromBio(_bio: string | null) {
+  return FALLBACK_CHAPTERS;
 }
 
 const SOCIAL_LABELS: Record<string, string> = {
@@ -68,6 +85,11 @@ const SOCIAL_LABELS: Record<string, string> = {
   youtube: 'YouTube',
   twitter: 'Twitter',
   tiktok: 'TikTok',
+};
+
+const BIOGRAPHY_IMAGES: Record<string, { src: string; alt: string }> = {
+  '01': { src: '/selamino-biography.jpg', alt: 'Selamino' },
+  '02': { src: '/dave-on-the-track-biography.jpg', alt: 'Dave On The Track' },
 };
 
 export function ArtistClient({ artist }: ArtistClientProps) {
@@ -81,11 +103,6 @@ export function ArtistClient({ artist }: ArtistClientProps) {
       
       {/* Editorial Title Banner */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 text-center space-y-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/5 border border-white/10 text-zinc-400">
-          <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-          <span>Documentary Ledger</span>
-        </div>
-        
         <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-serif font-black tracking-wide text-gold-shimmer uppercase leading-none">
           {artist.stageName}
         </h1>
@@ -129,7 +146,7 @@ export function ArtistClient({ artist }: ArtistClientProps) {
             </div>
             <p className="text-xs text-zinc-450 max-w-xs font-light leading-relaxed">
               {artist.bio?.split(/\n\s*\n/)[0]?.slice(0, 160) ||
-                'Recording live sessions from the Cairo analog warehouses. Captured directly to tape for organic tone separation.'}
+                'Recording live sessions from the East African analog warehouses. Captured directly to tape for organic tone separation.'}
             </p>
           </div>
         </div>
@@ -137,14 +154,17 @@ export function ArtistClient({ artist }: ArtistClientProps) {
 
       {/* Editorial Chapter Block */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
-        {chapters.map((chap, i) => (
-          <div 
-            key={chap.number} 
-            className={cn(
-              "grid grid-cols-1 md:grid-cols-12 gap-8 items-start scroll-reveal border-t border-white/5 pt-12",
-              i % 2 === 1 ? "md:flex-row-reverse" : ""
-            )}
-          >
+        {chapters.map((chap, i) => {
+          const biographyImage = BIOGRAPHY_IMAGES[chap.number];
+
+          return (
+            <div 
+              key={chap.number} 
+              className={cn(
+                "grid grid-cols-1 md:grid-cols-12 gap-8 items-start scroll-reveal border-t border-white/5 pt-12",
+                i % 2 === 1 ? "md:flex-row-reverse" : ""
+              )}
+            >
             {/* Chapter Number */}
             <div className="md:col-span-2 text-left">
               <span className="text-4xl md:text-6xl font-serif font-black text-primary/45 font-mono">
@@ -162,12 +182,25 @@ export function ArtistClient({ artist }: ArtistClientProps) {
                   {chap.title}
                 </h3>
               </div>
-              <p className="text-xs sm:text-sm text-zinc-400 font-light leading-relaxed max-w-2xl">
-                {chap.content}
-              </p>
+              <div className={cn(
+                "text-xs sm:text-sm text-zinc-400 font-light leading-relaxed",
+                biographyImage && "grid gap-6 md:grid-cols-[minmax(0,1fr)_13rem] md:items-start"
+              )}>
+                <div className="max-w-2xl">{chap.content}</div>
+                {biographyImage && (
+                  <figure className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-xl">
+                    <img
+                      src={biographyImage.src}
+                      alt={biographyImage.alt}
+                      className="aspect-[3/4] w-full object-cover object-top"
+                    />
+                  </figure>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </section>
 
       {/* Editorial Quotes & Philosophy */}
@@ -181,33 +214,8 @@ export function ArtistClient({ artist }: ArtistClientProps) {
           </p>
           <div className="h-0.5 w-12 bg-primary/30 rounded-full" />
           <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest font-mono">
-            - AfroNile Manifesto, Cairo Chapter
+            - AfroNile Manifesto, Nile Basin Chapter
           </span>
-        </div>
-      </section>
-
-      {/* Call to Actions */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 scroll-reveal">
-        <h3 className="text-xl md:text-2xl font-serif font-bold text-white tracking-wide">
-          Step into the Nile Waves
-        </h3>
-        <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
-          Access high-fidelity digital releases, physical wax merch, and cryptographically secured tour dates directly.
-        </p>
-        <div className="flex justify-center gap-4 pt-2">
-          <Link
-            href="/music"
-            className="h-10 px-6 rounded-full bg-primary hover:bg-primary/95 text-[10px] font-bold uppercase tracking-wider text-white flex items-center justify-center gap-1.5 transition active:scale-95 shadow-lg shadow-primary/10"
-          >
-            <Music className="h-3.5 w-3.5" />
-            <span>Explore releases</span>
-          </Link>
-          <Link
-            href="/tour"
-            className="h-10 px-6 rounded-full border border-white/5 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-200 flex items-center justify-center transition active:scale-95"
-          >
-            <span>Live tour dates</span>
-          </Link>
         </div>
       </section>
 

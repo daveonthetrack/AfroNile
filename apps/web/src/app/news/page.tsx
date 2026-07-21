@@ -1,5 +1,5 @@
 import React from 'react';
-import { Newspaper, Calendar, ArrowRight, Sparkles } from 'lucide-react';
+import { Newspaper, Calendar, ArrowRight } from 'lucide-react';
 import { prisma } from '@repo/database';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -9,7 +9,7 @@ export const revalidate = 60; // Cache news pages for 60 seconds
 
 export const metadata: Metadata = {
   title: 'News & Devlog | AfroNile',
-  description: 'Stay updated with the latest news, Nile Waves tour announcements, and technical engineering logs from AfroNile.',
+  description: 'Stay updated with the latest news, THE NEW WAVE tour announcements, and technical engineering logs from AfroNile.',
 };
 
 export default async function NewsPage() {
@@ -31,7 +31,7 @@ export default async function NewsPage() {
         <div className="flex h-[40vh] flex-col items-center justify-center text-center space-y-4 rounded-3xl bg-zinc-900/10 border border-white/5 backdrop-blur-sm">
           <Newspaper className="h-10 w-10 text-zinc-600 animate-pulse" />
           <h2 className="text-lg font-bold text-white">No Articles Published</h2>
-          <p className="text-sm text-zinc-500 max-w-xs">Keep checking back for Nile Waves tour announcements and technical updates.</p>
+          <p className="text-sm text-zinc-500 max-w-xs">Keep checking back for THE NEW WAVE tour announcements and technical updates.</p>
         </div>
       </div>
     );
@@ -77,11 +77,6 @@ export default async function NewsPage() {
                 <span className="flex items-center gap-1 text-zinc-500 tabular-nums">
                   <Calendar className="h-3.5 w-3.5" />
                   <span>{formatDate(post.publishedAt)}</span>
-                </span>
-                
-                <span className="capitalize px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  <span>{post.type}</span>
                 </span>
               </div>
 

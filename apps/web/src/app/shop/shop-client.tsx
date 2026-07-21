@@ -74,7 +74,7 @@ export function ShopClient({ products }: ShopClientProps) {
       <div className="border-b border-white/5 pb-6 text-left">
         <h1 className="text-4xl font-serif font-black text-white tracking-wide flex items-center gap-3">
           <ShoppingBag className="h-7 w-7 text-primary" />
-          <span>BOUTIQUE</span>
+          <span>MERCH</span>
         </h1>
         <p className="text-xs text-zinc-400 mt-2 font-mono uppercase tracking-widest">
           Premium Artifacts & Physical Releases

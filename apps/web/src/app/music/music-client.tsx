@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, ShoppingCart, Disc } from 'lucide-react';
+import { Play, Pause, Disc } from 'lucide-react';
 import { useAudioStore, Track } from '../../modules/audio/hooks/useAudioStore';
 import { cn } from '../../lib/utils';
-import { useCartStore } from '../../modules/commerce/hooks/useCartStore';
 
 export interface MusicClientProps {
   artistName: string;
@@ -21,36 +20,18 @@ export interface MusicClientProps {
       durationSeconds: number;
     }[];
   }[];
-  albumProducts: {
-    id: string;
-    priceCents: number;
-    sku: string;
-  }[];
 }
 
-export function MusicClient({ artistName, albums, albumProducts }: MusicClientProps) {
-  const { playTrack, currentTrack } = useAudioStore();
-  const { addItem } = useCartStore();
+export function MusicClient({ artistName, albums }: MusicClientProps) {
+  const { playTrack, currentTrack, isPlaying, togglePlay } = useAudioStore();
   const [activeAlbumId, setActiveAlbumId] = useState<string>(albums[0]?.id || '');
 
-  const handleAddAlbumToCart = (album: typeof albums[number], product: typeof albumProducts[number]) => {
-    addItem({
-      id: product.id,
-      title: `${album.title} (Digital Album)`,
-      priceCents: album.priceCents,
-      sku: product.sku,
-      type: 'VIP_EXPERIENCE',
-    });
-  };
 
-  const formatPrice = (cents: number) => {
-    return (cents / 100).toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    });
-  };
 
   const activeAlbum = albums.find((a) => a.id === activeAlbumId) || albums[0];
+  const isActiveAlbumPlaying = Boolean(
+    isPlaying && activeAlbum?.songs.some((song) => song.id === currentTrack?.id)
+  );
 
   return (
     <div className="space-y-16 pt-16">
@@ -59,11 +40,8 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
       <div className="border-b border-white/5 pb-6 text-left">
         <h1 className="text-4xl font-serif font-black text-white tracking-wide flex items-center gap-3">
           <Disc className="h-7 w-7 text-primary animate-spin-continuous" />
-          <span>VINYL ARCHIVE</span>
+          <span>MUSIC</span>
         </h1>
-        <p className="text-xs text-zinc-400 mt-2 font-mono uppercase tracking-widest">
-          East African inspired releases • Crate Selection
-        </p>
       </div>
 
       {/* Premium Vinyl Browsing Interface */}
@@ -71,14 +49,9 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
         
         {/* Left Column: The Vinyl Collection Crate (Sleeve Slider) */}
         <div className="lg:col-span-5 space-y-8 text-left">
-          <div className="px-1">
-            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Select Release Sleeve</span>
-          </div>
-
           <div className="space-y-6">
             {albums.map((album) => {
               const isActive = album.id === activeAlbumId;
-              const product = albumProducts.find((p) => p.sku === `ALBUM_${album.id}`);
               
               return (
                 <div 
@@ -129,7 +102,12 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
                   </div>
 
                   {/* Album Details */}
-                  <div className="min-w-0 flex-1 space-y-1">
+                  <div
+                    className={cn(
+                      "min-w-0 flex-1 space-y-1 transition-[padding] duration-700 ease-out",
+                      isActive && "sm:pl-12"
+                    )}
+                  >
                     <h3 className="text-base font-serif font-bold text-white tracking-wide truncate">
                       {album.title}
                     </h3>
@@ -137,18 +115,26 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
                       {artistName} • Studio Album
                     </p>
                     
-                    {isActive && product && (
+                    {isActive && (
                       <div className="pt-2 flex items-center gap-2">
-                        <span className="text-xs font-bold text-white font-mono">{formatPrice(album.priceCents)}</span>
+                        <span className="text-xs font-bold text-primary font-mono">Free to Stream</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleAddAlbumToCart(album, product);
+                            const playlist: Track[] = album.songs.map((song) => ({
+                              id: song.id,
+                              title: song.title,
+                              artistName,
+                              coverImageUrl: album.coverImageUrl,
+                              audioUrl: song.audioUrl,
+                              durationSeconds: song.durationSeconds,
+                            }));
+                            playTrack(playlist[0]);
                           }}
-                          className="h-7 px-3.5 rounded-full bg-primary hover:bg-primary/95 text-[9px] font-bold uppercase tracking-wider text-white flex items-center gap-1 transition active:scale-95 shadow-md"
+                          className="h-7 px-3.5 rounded-full bg-primary hover:bg-primary/95 text-[9px] font-bold uppercase tracking-wider text-white flex items-center gap-1 transition active:scale-95 shadow-md cursor-pointer animate-pulse"
                         >
-                          <ShoppingCart className="h-3 w-3" />
-                          <span>Buy Vinyl</span>
+                          <Play className="h-3 w-3 fill-current" />
+                          <span>Listen Now</span>
                         </button>
                       </div>
                     )}
@@ -171,11 +157,15 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
                 <div className="space-y-1">
                   <span className="text-[9px] font-bold text-primary uppercase tracking-widest font-mono">Currently Loaded Disc</span>
                   <h2 className="text-2xl md:text-3xl font-serif font-black tracking-wide text-white uppercase">{activeAlbum.title}</h2>
-                  <p className="text-xs text-zinc-500 font-mono">LINER NOTES & SELECTIONS</p>
                 </div>
                 
                 <button
                   onClick={() => {
+                    if (activeAlbum.songs.some((song) => song.id === currentTrack?.id)) {
+                      togglePlay();
+                      return;
+                    }
+
                     const playlist: Track[] = activeAlbum.songs.map((s) => ({
                       id: s.id,
                       title: s.title,
@@ -186,9 +176,14 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
                     }));
                     playTrack(playlist[0]);
                   }}
+                  aria-label={isActiveAlbumPlaying ? 'Pause album' : 'Play album'}
                   className="h-10 w-10 rounded-full bg-white hover:bg-zinc-200 text-black flex items-center justify-center transition active:scale-95 shadow-lg"
                 >
-                  <Play className="h-4.5 w-4.5 fill-current ml-0.5" />
+                  {isActiveAlbumPlaying ? (
+                    <Pause className="h-4.5 w-4.5 fill-current" />
+                  ) : (
+                    <Play className="h-4.5 w-4.5 fill-current ml-0.5" />
+                  )}
                 </button>
               </div>
 
@@ -210,7 +205,12 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
                         </span>
                         
                         <button
-                          onClick={() =>
+                          onClick={() => {
+                            if (isActive) {
+                              togglePlay();
+                              return;
+                            }
+
                             playTrack({
                               id: song.id,
                               title: song.title,
@@ -218,14 +218,19 @@ export function MusicClient({ artistName, albums, albumProducts }: MusicClientPr
                               coverImageUrl: activeAlbum.coverImageUrl,
                               audioUrl: song.audioUrl,
                               durationSeconds: song.durationSeconds,
-                            })
-                          }
+                            });
+                          }}
+                          aria-label={isActive && isPlaying ? `Pause ${song.title}` : `Play ${song.title}`}
                           className={cn(
                             'h-8 w-8 rounded-full border flex items-center justify-center shrink-0 transition shadow-sm',
                             isActive ? 'bg-primary border-primary text-white' : 'border-white/10 text-zinc-500 hover:text-white'
                           )}
                         >
-                          <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
+                          {isActive && isPlaying ? (
+                            <Pause className="h-3.5 w-3.5 fill-current" />
+                          ) : (
+                            <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
+                          )}
                         </button>
                         
                         <span className={cn('text-xs font-semibold tracking-wide truncate', isActive ? 'text-primary' : 'text-zinc-250')}>
