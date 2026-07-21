@@ -7,7 +7,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Discography & Audio Player | AfroNile',
-  description: 'Explore and stream the complete Nile Waves discography. Unlock high-fidelity streams by purchasing albums directly from the artist.',
+  description: 'Explore and stream the complete THE NEW WAVE discography. High-fidelity streams direct from the artist.',
 };
 
 export default async function MusicPage() {
@@ -34,11 +34,6 @@ export default async function MusicPage() {
     },
   });
 
-  // 4. Fetch album products
-  const albumProducts = await prisma.product.findMany({
-    where: { type: 'VIP_EXPERIENCE', sku: { startsWith: 'ALBUM_' } },
-  });
-
   return (
     <MusicClient
       artistName={artist.stageName}
@@ -54,11 +49,6 @@ export default async function MusicPage() {
           audioUrl: s.audioUrl,
           durationSeconds: s.durationSeconds,
         })),
-      }))}
-      albumProducts={albumProducts.map((p) => ({
-        id: p.id,
-        priceCents: p.priceCents,
-        sku: p.sku,
       }))}
     />
   );

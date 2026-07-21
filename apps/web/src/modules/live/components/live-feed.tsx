@@ -10,7 +10,7 @@ interface LiveFeedProps {
 
 export function LiveFeed({ items }: LiveFeedProps) {
   return (
-    <div className="bg-zinc-900/10 border border-white/5 p-6 rounded-3xl backdrop-blur-md space-y-4 shadow-xl select-none">
+    <div className="glass-card p-6 rounded-[2rem] space-y-4 shadow-xl select-none">
       
       {/* Title */}
       <div className="flex items-center gap-2 border-b border-white/5 pb-3">

@@ -27,7 +27,7 @@ export const MOCK_FEED_EVENTS = [
   'Someone just supported tonight’s performance.',
   'A fan just purchased the Nile Waves vinyl.',
   'Thank you for supporting AfroNile.',
-  'A fan checked in from Giza, Cairo.',
+  'A fan checked in from Nairobi, Kenya.',
   'Someone purchased the Nile Waves Tour Tee.',
   'Direct support backing received. Shukran!',
 ];

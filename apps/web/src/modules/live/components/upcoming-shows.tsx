@@ -48,7 +48,7 @@ export function UpcomingShows({ events, ticketProduct }: UpcomingShowsProps) {
   });
 
   return (
-    <div className="bg-zinc-900/10 border border-white/5 p-6 rounded-3xl backdrop-blur-md space-y-6 shadow-xl select-none">
+    <div className="glass-card p-6 rounded-[2rem] space-y-6 shadow-xl select-none">
       <div className="space-y-1">
         <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
           <Calendar className="h-4.5 w-4.5 text-primary" />

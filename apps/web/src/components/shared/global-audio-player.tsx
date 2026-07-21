@@ -144,7 +144,7 @@ export function GlobalAudioPlayer() {
       />
 
       {/* Left Section: Metadata */}
-      <div className="flex items-center min-w-0 w-1/4">
+      <div className="flex items-center min-w-0 w-1/2 sm:w-1/4">
         {currentTrack ? (
           <>
             <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-900 border border-white/10 group shadow-md">
@@ -179,7 +179,7 @@ export function GlobalAudioPlayer() {
       </div>
 
       {/* Middle Section: Controls & Progress */}
-      <div className="flex flex-col items-center flex-1 max-w-xl px-4 w-1/2">
+      <div className="flex flex-col items-center flex-1 max-w-xl px-4 w-1/2 sm:w-1/2">
         <div className="flex items-center gap-6 mb-1.5">
           <button 
             onClick={prevTrack} 
@@ -234,7 +234,7 @@ export function GlobalAudioPlayer() {
       </div>
 
       {/* Right Section: Volume & Queue */}
-      <div className="flex items-center justify-end gap-4 w-1/4">
+      <div className="hidden sm:flex items-center justify-end gap-4 w-1/4">
         <button className="text-zinc-500 hover:text-white transition md:block hidden">
           <ListMusic className="h-4 w-4" />
         </button>

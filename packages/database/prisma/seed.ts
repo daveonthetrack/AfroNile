@@ -102,11 +102,13 @@ async function main() {
   // 3. Create Artist profile
   const artist = await prisma.artist.upsert({
     where: { slug: 'afronile' },
-    update: {},
+    update: {
+      bio: 'AfroNile is a story of resilience, rebirth, and the power of music to bridge generations. Formed by Selamino and Dave On The Track, AfroNile embodies the perfect balance of tradition and innovation.',
+    },
     create: {
       stageName: 'AfroNile',
       slug: 'afronile',
-      bio: 'Pioneering East African Afrobeat grooves and global soundwaves.',
+      bio: 'AfroNile is a story of resilience, rebirth, and the power of music to bridge generations. Formed by Selamino and Dave On The Track, AfroNile embodies the perfect balance of tradition and innovation.',
       socialLinks: {
         spotify: 'https://open.spotify.com/artist/4X9z8e4b8rT7k9m2Q',
         instagram: 'https://instagram.com/afronile.music',
@@ -121,7 +123,7 @@ async function main() {
   const album = await prisma.album.create({
     data: {
       artistId: artist.id,
-      title: 'Nile Waves',
+      title: 'THE NEW WAVE',
       priceCents: 1999, // $19.99
       releaseDate: new Date('2026-06-30'),
       coverImageUrl: '/nile_waves_album_art.jpg',
@@ -198,7 +200,7 @@ async function main() {
   const cairoEvent = await prisma.event.create({
     data: {
       artistId: artist.id,
-      title: 'Nile Waves Album Release Concert',
+      title: 'THE NEW WAVE Album Release Concert',
       venueName: 'The Dome',
       venueAddress: 'Nairobi, Kenya',
       eventDate: new Date('2026-10-15T20:00:00Z'),
@@ -208,7 +210,7 @@ async function main() {
   const alexEvent = await prisma.event.create({
     data: {
       artistId: artist.id,
-      title: 'Nile Waves Live in Kampala',
+      title: 'THE NEW WAVE Live in Kampala',
       venueName: 'National Theatre',
       venueAddress: 'Kampala, Uganda',
       eventDate: new Date('2026-11-12T19:00:00Z'),
@@ -218,7 +220,7 @@ async function main() {
   const londonEvent = await prisma.event.create({
     data: {
       artistId: artist.id,
-      title: 'Nile Waves London Debut',
+      title: 'THE NEW WAVE London Debut',
       venueName: 'The Jazz Cafe',
       venueAddress: 'Camden Town, London, UK',
       eventDate: new Date('2026-12-05T20:00:00Z'),
@@ -228,7 +230,7 @@ async function main() {
   const parisEvent = await prisma.event.create({
     data: {
       artistId: artist.id,
-      title: 'Nile Waves Paris Showcase',
+      title: 'THE NEW WAVE Paris Showcase',
       venueName: 'New Morning',
       venueAddress: '10th Arrondissement, Paris, France',
       eventDate: new Date('2026-12-18T20:30:00Z'),
@@ -241,13 +243,13 @@ async function main() {
   await prisma.contentPost.createMany({
     data: [
       {
-        title: 'AfroNile Announces Nile Waves Album Release Tour',
-        slug: 'afronile-announces-nile-waves-album-release-tour',
+        title: 'AfroNile Announces THE NEW WAVE Album Release Tour',
+        slug: 'afronile-announces-the-new-wave-album-release-tour',
         type: 'news',
         publishedAt: new Date('2026-06-30T12:00:00Z'),
         bodyHtml: `
-          <p class="mb-4 text-zinc-300">We are thrilled to officially announce the release of our debut studio album <strong>Nile Waves</strong>, accompanied by a multi-city live tour starting this fall at the Pyramids Arena.</p>
-          <p class="mb-4 text-zinc-300">The Nile Waves tour represents a full-immersion audio-visual experience. By combining ancient Nile instrumentation with modern synthesized Afrobeat structures, the live show will guide listeners through a musical odyssey across Cairo, Alexandria, London, and Paris.</p>
+          <p class="mb-4 text-zinc-300">We are thrilled to officially announce the release of our debut studio album <strong>THE NEW WAVE</strong>, accompanied by a multi-city live tour starting this fall at the Dome Arena.</p>
+          <p class="mb-4 text-zinc-300">THE NEW WAVE tour represents a full-immersion audio-visual experience. By combining ancient Nile instrumentation with modern synthesized Afrobeat structures, the live show will guide listeners through a musical odyssey across Nairobi, Kampala, London, and Paris.</p>
         `,
       },
       {
@@ -271,12 +273,12 @@ async function main() {
         `,
       },
       {
-        title: 'Vinyl Production Update: Nile Waves Gatefold Shipping Details',
-        slug: 'vinyl-production-update-nile-waves-gatefold',
+        title: 'Vinyl Production Update: THE NEW WAVE Gatefold Shipping Details',
+        slug: 'vinyl-production-update-the-new-wave-gatefold',
         type: 'news',
         publishedAt: new Date('2026-07-09T09:00:00Z'),
         bodyHtml: `
-          <p class="mb-4 text-zinc-300">Due to overwhelming demand from our fans, our vinyl test pressings for Nile Waves have been completed ahead of schedule by the manufacturing house.</p>
+          <p class="mb-4 text-zinc-300">Due to overwhelming demand from our fans, our vinyl test pressings for THE NEW WAVE have been completed ahead of schedule by the manufacturing house.</p>
           <p class="mb-4 text-zinc-300">Each vinyl package will be housed in a premium heavyweight gatefold cover featuring concept art of the Nile basin at sunset.</p>
         `,
       }
@@ -293,7 +295,7 @@ async function main() {
     update: {},
     create: {
       type: 'VIP_EXPERIENCE',
-      title: 'Nile Waves - Full Digital Album & Vault Access',
+      title: 'THE NEW WAVE - Full Digital Album & Vault Access',
       priceCents: 1999,
       sku: `ALBUM_${album.id}`,
       stockQuantity: 999999,
@@ -306,7 +308,7 @@ async function main() {
     update: {},
     create: {
       type: 'TICKET_DIGITAL',
-      title: 'General Admission - Nile Waves Release Concert (Cairo)',
+      title: 'General Admission - THE NEW WAVE Release Concert (Nairobi)',
       priceCents: 4500,
       sku: `TICKET_${cairoEvent.id}`,
       stockQuantity: 500,
@@ -318,7 +320,7 @@ async function main() {
     update: {},
     create: {
       type: 'TICKET_DIGITAL',
-      title: 'General Admission - Roman Amphitheatre Pass (Alexandria)',
+      title: 'General Admission - THE NEW WAVE Concert (Kampala)',
       priceCents: 3500,
       sku: `TICKET_${alexEvent.id}`,
       stockQuantity: 350,
@@ -355,7 +357,7 @@ async function main() {
     update: {},
     create: {
       type: 'MERCHANDISE',
-      title: 'AfroNile Nile Waves Tour Tee (Black / Large)',
+      title: 'AfroNile THE NEW WAVE Tour Tee (Black / Large)',
       priceCents: 3500,
       sku: 'MERCH_TSHIRT_BLACK_L',
       stockQuantity: 150,
@@ -367,7 +369,7 @@ async function main() {
     update: {},
     create: {
       type: 'MERCHANDISE',
-      title: 'AfroNile Nile Waves Tour Tee (Black / Medium)',
+      title: 'AfroNile THE NEW WAVE Tour Tee (Black / Medium)',
       priceCents: 3500,
       sku: 'MERCH_TSHIRT_BLACK_M',
       stockQuantity: 120,
@@ -379,7 +381,7 @@ async function main() {
     update: {},
     create: {
       type: 'MERCHANDISE',
-      title: 'Cairo Sunset Heavyweight Hoodie (Sand / Large)',
+      title: 'Nile Sunset Heavyweight Hoodie (Sand / Large)',
       priceCents: 6500,
       sku: 'MERCH_HOODIE_SAND_L',
       stockQuantity: 80,
@@ -391,7 +393,7 @@ async function main() {
     update: {},
     create: {
       type: 'MERCHANDISE',
-      title: 'Nile Waves Gatefold 12" Vinyl (Limited Pressing)',
+      title: 'THE NEW WAVE Gatefold 12" Vinyl (Limited Pressing)',
       priceCents: 4000,
       sku: 'MERCH_VINYL_LIMITED',
       stockQuantity: 50,

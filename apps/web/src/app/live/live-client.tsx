@@ -158,11 +158,11 @@ export function LiveClient({ events }: LiveClientProps) {
 
       </main>
 
-      {/* Glowing Cairo Soundwave Line visual footer */}
+      {/* Glowing Soundwave Line visual footer */}
       <footer className="w-full relative py-2 pt-4 z-10 shrink-0">
         <svg className="w-full h-8 stroke-[1.5] transition-all duration-300" viewBox="0 0 100 20" fill="none">
           <defs>
-            <linearGradient id="cairoWaveGrad" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id="nileWaveGrad" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#d4af37" stopOpacity="0.05" />
               <stop 
                 offset="50%" 
@@ -174,7 +174,7 @@ export function LiveClient({ events }: LiveClientProps) {
           </defs>
           <path 
             d={getWavePath()} 
-            stroke="url(#cairoWaveGrad)" 
+            stroke="url(#nileWaveGrad)" 
             strokeLinecap="round"
             className={`transition-all duration-500 ${getWavePulseSpeed()}`}
           />

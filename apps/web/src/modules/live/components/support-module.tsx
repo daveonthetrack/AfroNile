@@ -106,7 +106,7 @@ export function SupportModule({
     if (selectedTier === 5) return 'Gentle Vibe';
     if (selectedTier === 10) return 'Deep Pulse';
     if (selectedTier === 20) return 'Sonic Storm 🔥';
-    if (selectedTier === 50) return 'Giza Overload ⚡';
+    if (selectedTier === 50) return 'Nile Overload ⚡';
     if (customAmount) return 'Custom Momentum';
     return 'Calm Vibe';
   };

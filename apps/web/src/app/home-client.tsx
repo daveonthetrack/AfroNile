@@ -75,17 +75,6 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
     });
   };
 
-  const handleAddAlbumToCart = (album: typeof albums[number]) => {
-    const albumSku = `ALBUM_${album.id}`;
-    const product = products.find((p) => p.sku === albumSku);
-    addItem({
-      id: product ? product.id : albumSku,
-      title: `${album.title} (Digital Album)`,
-      priceCents: album.priceCents,
-      sku: albumSku,
-      type: 'VIP_EXPERIENCE',
-    });
-  };
 
   const formatPrice = (cents: number) => {
     return (cents / 100).toLocaleString('en-US', {
@@ -253,14 +242,24 @@ export function HomeClient({ artist, albums, events, products }: HomeClientProps
                 <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block font-mono font-medium">Format: Digital FLAC</span>
-                    <p className="text-base font-mono font-bold text-white mt-0.5">{formatPrice(album.priceCents)}</p>
+                    <p className="text-sm font-mono font-bold text-primary mt-0.5">Free to Stream</p>
                   </div>
                   <button
-                    onClick={() => handleAddAlbumToCart(album)}
-                    className="h-9 px-5 rounded bg-white hover:bg-zinc-200 text-[10px] font-bold uppercase tracking-wider text-black flex items-center gap-1.5 transition active:scale-98 cursor-pointer"
+                    onClick={() => {
+                      const playlist: Track[] = album.songs.map((song) => ({
+                        id: song.id,
+                        title: song.title,
+                        artistName: artist.stageName,
+                        coverImageUrl: album.coverImageUrl,
+                        audioUrl: song.audioUrl,
+                        durationSeconds: song.durationSeconds,
+                      }));
+                      playTrack(playlist[0]);
+                    }}
+                    className="h-9 px-5 rounded bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-wider text-white flex items-center gap-1.5 transition active:scale-98 cursor-pointer animate-pulse"
                   >
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                    <span>Get Album</span>
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    <span>Listen Now</span>
                   </button>
                 </div>
               </div>

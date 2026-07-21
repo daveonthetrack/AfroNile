@@ -30,10 +30,10 @@ export async function POST(req: NextRequest) {
       include: { role: true },
     });
 
-    if (!user) {
+    if (!user || !user.passwordHash) {
       await AuditService.record({
         action: 'AUTH_LOGIN_FAILED',
-        details: `Login failed: user not found for email "${email}"`,
+        details: `Login failed: user not found or password hash empty for email "${email}"`,
         ipAddress: clientIp,
       });
       return NextResponse.json(

@@ -100,7 +100,7 @@ export function CartDrawer({ userId }: CartDrawerProps) {
       />
 
       {/* Sliding Drawer Container */}
-      <div className="absolute inset-y-0 right-0 pl-10 max-w-full flex">
+      <div className="absolute inset-y-0 right-0 pl-4 sm:pl-10 max-w-full flex">
         <div className="w-screen max-w-md bg-zinc-950 border-l border-white/5 shadow-2xl flex flex-col justify-between h-full animate-in slide-in-from-right duration-300">
           
           {/* Header */}

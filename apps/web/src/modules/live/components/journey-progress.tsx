@@ -20,7 +20,7 @@ export function JourneyProgress() {
   }, []);
 
   return (
-    <div className="bg-zinc-900/10 border border-white/5 p-6 rounded-3xl backdrop-blur-md space-y-6 shadow-xl select-none">
+    <div className="glass-card p-6 rounded-[2rem] space-y-6 shadow-xl select-none">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
@@ -90,7 +90,7 @@ export function JourneyProgress() {
       </div>
 
       <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-widest leading-none border-t border-white/5 pt-4">
-        <span>Giza Soundwaves</span>
+        <span>Nile Soundwaves</span>
         <span>Global Journey</span>
       </div>
     </div>

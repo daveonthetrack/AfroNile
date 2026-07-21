@@ -16,7 +16,7 @@ interface LivePlayerProps {
 export function LivePlayer({ currentSong, setlistProgress, albumCoverUrl }: LivePlayerProps) {
   if (!currentSong) {
     return (
-      <div className="bg-zinc-900/10 border border-white/5 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center h-48 select-none">
+      <div className="glass-card p-6 rounded-[2rem] flex flex-col items-center justify-center text-center h-48 select-none">
         <Disc className="h-7 w-7 text-zinc-600 animate-spin duration-[4000ms] mb-3" />
         <p className="text-sm font-semibold text-zinc-400">Waiting for performance to start...</p>
         <span className="text-[10px] text-zinc-600 mt-1 uppercase tracking-wider block font-mono">Live Sync Idle</span>
@@ -32,7 +32,7 @@ export function LivePlayer({ currentSong, setlistProgress, albumCoverUrl }: Live
   };
 
   return (
-    <div className="bg-zinc-900/10 border border-white/5 p-6 rounded-3xl backdrop-blur-md space-y-6 shadow-xl select-none">
+    <div className="glass-card p-6 rounded-[2rem] space-y-6 shadow-xl select-none">
       
       {/* Set progress indicator */}
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
