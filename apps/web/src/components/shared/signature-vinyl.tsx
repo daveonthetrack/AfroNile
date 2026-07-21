@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAudioStore } from '../../modules/audio/hooks/useAudioStore';
 import { Play, Pause } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -10,23 +10,61 @@ export function SignatureVinyl() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const vinylRef = useRef<HTMLDivElement>(null);
+  const isMinimizedRef = useRef(false);
+  const previousBoundsRef = useRef<DOMRect | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    let animationFrame: number | null = null;
 
     const handleScroll = () => {
-      const scrolled = window.scrollY;
-      // Shrink turntable to bottom right after scrolling past 350px
-      setIsMinimized(scrolled > 350);
-      setScrollProgress(scrolled * 0.15); // Scale rotation rate
+      if (animationFrame !== null) return;
+
+      animationFrame = window.requestAnimationFrame(() => {
+        const scrolled = window.scrollY;
+        const shouldMinimize = scrolled > 350;
+
+        if (shouldMinimize !== isMinimizedRef.current) {
+          previousBoundsRef.current = vinylRef.current?.getBoundingClientRect() ?? null;
+          isMinimizedRef.current = shouldMinimize;
+          setIsMinimized(shouldMinimize);
+        }
+
+        setScrollProgress(scrolled * 0.15);
+        animationFrame = null;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Run once at start
     handleScroll();
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
+    };
   }, []);
+
+  useLayoutEffect(() => {
+    const previousBounds = previousBoundsRef.current;
+    const vinyl = vinylRef.current;
+
+    if (!previousBounds || !vinyl) return;
+
+    previousBoundsRef.current = null;
+    const nextBounds = vinyl.getBoundingClientRect();
+    const translateX = previousBounds.left - nextBounds.left;
+    const translateY = previousBounds.top - nextBounds.top;
+    const scaleX = previousBounds.width / nextBounds.width;
+    const scaleY = previousBounds.height / nextBounds.height;
+
+    vinyl.style.transformOrigin = 'top left';
+    vinyl.style.transition = 'none';
+    vinyl.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    void vinyl.offsetWidth;
+    vinyl.style.transition = 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1)';
+    vinyl.style.transform = '';
+  }, [isMinimized]);
 
   if (!mounted) return null;
 
@@ -36,8 +74,9 @@ export function SignatureVinyl() {
 
   return (
     <div
+      ref={vinylRef}
       className={cn(
-        'transition-all duration-700 ease-out z-40 select-none pointer-events-auto',
+        'z-40 select-none pointer-events-auto will-change-transform',
         isMinimized
           ? 'fixed bottom-28 right-6 w-16 h-16 md:w-20 md:h-20 shadow-2xl scale-100 opacity-90 hover:opacity-100 hover:scale-105'
           : 'relative w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] md:w-[450px] md:h-[450px] mx-auto'
