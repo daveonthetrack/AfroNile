@@ -39,13 +39,13 @@ const FALLBACK_CHAPTERS = [
     content: (
       <div className="space-y-4">
         <p>
-          Dawit Hagos, known professionally as Dave On The Track, is a Music Producer, Multi-Instrumentalist, DJ, and Audio Engineer dedicated to crafting dynamic, genre-blending soundscapes. With a deep passion for collaboration, he has worked with artists across the globe, including Ethiopian artists Rophnan and SALEMIA, Kenyan artist Rydah, and Puerto Rican artist Noelkinz.
+          Dawit Hagos, known as Dave On The Track, is a music producer, multi-instrumentalist, DJ, and audio engineer. His work brings together East African influences, live instrumentation, and modern production.
         </p>
         <p>
-          His production credits include ‘Alem Bire’, SALEMIA’s viral debut, as well as standout projects like ‘Ligoda’ and ‘Alula’, highlighting his versatility and ability to merge diverse musical styles.
+          He has spent years shaping a sound that is detailed, energetic, and open to different rhythms and ideas. Whether he is producing, arranging, or working behind the decks, the focus stays on making music that feels honest and alive.
         </p>
         <p>
-          Beyond the studio, Dave On The Track is an active member of the Recording Academy (DC Chapter), where he represents AfroNile and East African music on an international stage. Through his work, he advocates for the region’s rich musical heritage, ensuring its artists gain the global recognition they deserve. His mission extends beyond production—he is committed to elevating East African music and fostering meaningful connections between cultures through sound.
+          Dave is a Recording Academy member in the DC Chapter and uses his platform to help bring East African music to wider audiences. He is focused on creating work that respects where he comes from while continuing to move forward.
         </p>
       </div>
     ),
